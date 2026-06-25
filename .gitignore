@@ -1,0 +1,5 @@
+.worktrees/
+worktrees/
+cmdgate
+cmdgate-exec
+*.log
