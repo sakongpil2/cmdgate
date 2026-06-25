@@ -22,7 +22,7 @@ CmdGate는 운영자가 사전에 허용된 명령만 위임 권한으로 실행
 - `cmdgate policy validate --bundle <tar.gz>`
 - `cmdgate policy apply --bundle <tar.gz>`
 
-낶부적으로는 다음 형태로 `cmdgate-exec`를 호출합니다.
+내부적으로는 다음 형태로 `cmdgate-exec`를 호출합니다.
 
 ```bash
 sudo -n /opt/cmdgate/cmdgate-exec <subcommand> [args...]
@@ -83,7 +83,7 @@ sudo ./scripts/install-cmdgate.sh
 cmdgateadm ALL=(ALL) NOPASSWD: /opt/cmdgate/cmdgate-exec *
 ```
 
-`cmdgateadm` 사용자가 존재하지 않으면 설치 스크립트는 경고를 출력하고, 관리자가 해당 사용자를 생성한 뒤 규칙이 실제로 동작합니다.
+`cmdgateadm` 사용자가 존재하지 않으면 설치 스크립트는 경고를 출력합니다. 관리자가 해당 사용자를 직접 생성한 뒤에야 sudoers 규칙이 실제로 동작합니다.
 
 ## 사용 예시
 
@@ -96,7 +96,7 @@ cmdgate run list
 ### 허용된 명령 실행
 
 ```bash
-cmdgate run systemctl status kubelet
+cmdgate run systemctl restart kubelet
 cmdgate run journalctl -u kubelet -n 50 --no-pager
 ```
 
@@ -152,9 +152,10 @@ matchers:
 
 ### 명령 정의
 
-- `id`: 명령을 식별하는 고유한 ID입니다.
-- `desc`: 명령에 대한 설명입니다.
-- `cmd`: 허용할 명령 문자열입니다. 공백으로 구분된 argv로 파싱됩니다.
+- `version`: 정책 파일의 버전입니다.
+- `mode`: 정책 모드입니다. 현재 `allowlist-only`만 지원하며, `commands`에 명시된 명령만 실행할 수 있습니다.
+- `commands`: 허용할 명령 목록입니다.
+- `matchers`: placeholder에서 사용할 matcher 정의입니다.
 
 ### Matcher
 
@@ -179,6 +180,10 @@ cmd: "dnf install <rpmFiles:k8s-rpms>"
 ```
 
 위 예시에서는 `k8s-rpms` matcher에 정의된 RPM 이름들만 설치할 수 있습니다.
+
+- `type`: `rpmFiles`를 지정합니다.
+- `multiple`: `true`이면 여러 개의 RPM 파일을 한 번에 지정할 수 있습니다.
+- `metadataNameIn`: 허용할 RPM `NAME` 목록입니다.
 
 ## 감사 로그
 
