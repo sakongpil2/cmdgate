@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"os/user"
 	"regexp"
+	"sort"
 	"strings"
 	"unicode/utf8"
 
@@ -146,7 +147,14 @@ func (e *executor) runList() error {
 	rows := [][]string{
 		{colors.header("ID"), colors.header("DESCRIPTION"), colors.header("COMMAND")},
 	}
-	for _, c := range cfg.Commands {
+
+	sorted := make([]allowlist.Command, len(cfg.Commands))
+	copy(sorted, cfg.Commands)
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].ID < sorted[j].ID
+	})
+
+	for _, c := range sorted {
 		rows = append(rows, []string{
 			colors.id(c.ID),
 			colors.desc(c.Desc),

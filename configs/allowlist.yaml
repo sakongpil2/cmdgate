@@ -46,73 +46,9 @@ commands:
     desc: Reload systemd daemon configuration
     cmd: "systemctl daemon-reload"
 
-  - id: systemctl-status-firewalld
-    desc: Show firewalld service status
-    cmd: "systemctl status firewalld"
-
-  - id: systemctl-enable-firewalld
-    desc: Enable firewalld service
-    cmd: "systemctl enable firewalld --now"
-
-  - id: systemctl-disable-firewalld
-    desc: Disable firewalld service
-    cmd: "systemctl disable firewalld --now"
-
-  - id: systemctl-restart-firewalld
-    desc: Restart firewalld service
-    cmd: "systemctl restart firewalld"
-
-  - id: systemctl-start-firewalld
-    desc: Start firewalld service
-    cmd: "systemctl start firewalld"
-
-  - id: systemctl-stop-firewalld
-    desc: Stop firewalld service
-    cmd: "systemctl stop firewalld"
-
-  - id: systemctl-status-node-exporter
-    desc: Show node_exporter service status
-    cmd: "systemctl status node_exporter.service"
-
-  - id: systemctl-enable-node-exporter
-    desc: Enable node_exporter service
-    cmd: "systemctl enable node_exporter.service --now"
-
-  - id: systemctl-disable-node-exporter
-    desc: Disable node_exporter service
-    cmd: "systemctl disable node_exporter.service --now"
-
-  - id: systemctl-restart-node-exporter
-    desc: Restart node_exporter service
-    cmd: "systemctl restart node_exporter.service"
-
-  - id: systemctl-start-node-exporter
-    desc: Start node_exporter service
-    cmd: "systemctl start node_exporter.service"
-
-  - id: systemctl-stop-node-exporter
-    desc: Stop node_exporter service
-    cmd: "systemctl stop node_exporter.service"
-
-  - id: systemctl-list-swap-units
-    desc: List swap units
-    cmd: "systemctl list-units --type=swap --no-pager"
-
-  - id: setup-oks-node
-    desc: Run OKS node initial setup script (root managed)
-    cmd: "/opt/cmdgate/scripts/setup-oks-node.sh"
-
   - id: run-cmdgate-script
     desc: Run a script under /opt/cmdgate
     cmd: "/opt/cmdgate/<string:script>"
-
-  - id: kubeadm-join
-    desc: Join node to Kubernetes cluster
-    cmd: "kubeadm join <string:api-server> --token <string:token> --discovery-token-ca-cert-hash sha256:<string:hash>"
-
-  - id: kubeadm-upgrade-apply
-    desc: Apply Kubernetes upgrade
-    cmd: "kubeadm upgrade apply <string:version>"
 
   - id: dnf-install-kubelet
     desc: Install kubelet package
