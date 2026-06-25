@@ -2,225 +2,225 @@ version: 1.0.0
 mode: allowlist-only
 
 commands:
-  - id: systemctl-restart-kubelet
-    desc: Restart kubelet service
-    cmd: "systemctl restart kubelet"
+ - id: systemctl-restart-kubelet
+   desc: Restart kubelet service
+   cmd: "systemctl restart kubelet"
 
-  - id: systemctl-restart-containerd
-    desc: Restart containerd service
-    cmd: "systemctl restart containerd"
+ - id: systemctl-restart-containerd
+   desc: Restart containerd service
+   cmd: "systemctl restart containerd"
 
-  - id: systemctl-stop-kubelet
-    desc: Stop kubelet service
-    cmd: "systemctl stop kubelet"
+ - id: systemctl-stop-kubelet
+   desc: Stop kubelet service
+   cmd: "systemctl stop kubelet"
 
-  - id: systemctl-stop-containerd
-    desc: Stop containerd service
-    cmd: "systemctl stop containerd"
+ - id: systemctl-stop-containerd
+   desc: Stop containerd service
+   cmd: "systemctl stop containerd"
 
-  - id: systemctl-start-kubelet
-    desc: Start kubelet service
-    cmd: "systemctl start kubelet"
+ - id: systemctl-start-kubelet
+   desc: Start kubelet service
+   cmd: "systemctl start kubelet"
 
-  - id: systemctl-start-containerd
-    desc: Start containerd service
-    cmd: "systemctl start containerd"
+ - id: systemctl-start-containerd
+   desc: Start containerd service
+   cmd: "systemctl start containerd"
 
-  - id: systemctl-status-kubelet
-    desc: Show kubelet service status
-    cmd: "systemctl status kubelet"
+ - id: systemctl-status-kubelet
+   desc: Show kubelet service status
+   cmd: "systemctl status kubelet"
 
-  - id: systemctl-status-containerd
-    desc: Show containerd service status
-    cmd: "systemctl status containerd"
+ - id: systemctl-status-containerd
+   desc: Show containerd service status
+   cmd: "systemctl status containerd"
 
-  - id: systemctl-enable-kubelet
-    desc: Enable kubelet service
-    cmd: "systemctl enable kubelet"
+ - id: systemctl-enable-kubelet
+   desc: Enable kubelet service
+   cmd: "systemctl enable kubelet"
 
-  - id: systemctl-enable-containerd
-    desc: Enable containerd service
-    cmd: "systemctl enable containerd"
+ - id: systemctl-enable-containerd
+   desc: Enable containerd service
+   cmd: "systemctl enable containerd"
 
-  - id: systemctl-daemon-reload
-    desc: Reload systemd daemon configuration
-    cmd: "systemctl daemon-reload"
+ - id: systemctl-daemon-reload
+   desc: Reload systemd daemon configuration
+   cmd: "systemctl daemon-reload"
 
-  - id: run-cmdgate-script
-    desc: Run a script under /opt/cmdgate
-    cmd: "/opt/cmdgate/<string:script>"
+ - id: run-cmdgate-script
+   desc: Run a script under /opt/cmdgate
+   cmd: "/opt/cmdgate/<string:script>"
 
-  - id: dnf-install-kubelet
-    desc: Install kubelet package
-    cmd: "dnf install kubelet"
+ - id: dnf-install-kubelet
+   desc: Install kubelet package
+   cmd: "dnf install kubelet"
 
-  - id: dnf-install-kubeadm
-    desc: Install kubeadm package
-    cmd: "dnf install kubeadm"
+ - id: dnf-install-kubeadm
+   desc: Install kubeadm package
+   cmd: "dnf install kubeadm"
 
-  - id: dnf-install-local-rpms
-    desc: Install local RPM files
-    cmd: "dnf install <rpmFiles:k8s-rpms>"
+ - id: dnf-install-local-rpms
+   desc: Install local RPM files
+   cmd: "dnf install <rpmFiles:k8s-rpms>"
 
-  - id: dnf-info-containerd
-    desc: Show containerd package information
-    cmd: "dnf info containerd"
+ - id: dnf-info-containerd
+   desc: Show containerd package information
+   cmd: "dnf info containerd"
 
-  - id: dnf-repolist
-    desc: List DNF repositories
-    cmd: "dnf repolist"
+ - id: dnf-repolist
+   desc: List DNF repositories
+   cmd: "dnf repolist"
 
-  - id: kubeadm-version
-    desc: Show kubeadm version
-    cmd: "kubeadm version"
+ - id: kubeadm-version
+   desc: Show kubeadm version
+   cmd: "kubeadm version"
 
-  - id: kubeadm-config-images-list
-    desc: List kubeadm required images
-    cmd: "kubeadm config images list"
+ - id: kubeadm-config-images-list
+   desc: List kubeadm required images
+   cmd: "kubeadm config images list"
 
-  - id: kubeadm-config-images-pull
-    desc: Pull kubeadm required images
-    cmd: "kubeadm config images pull"
+ - id: kubeadm-config-images-pull
+   desc: Pull kubeadm required images
+   cmd: "kubeadm config images pull"
 
-  - id: kubeadm-upgrade-plan
-    desc: Show kubeadm upgrade plan
-    cmd: "kubeadm upgrade plan"
+ - id: kubeadm-upgrade-plan
+   desc: Show kubeadm upgrade plan
+   cmd: "kubeadm upgrade plan"
 
-  - id: kubeadm-upgrade-node
-    desc: Upgrade kubeadm node
-    cmd: "kubeadm upgrade node"
+ - id: kubeadm-upgrade-node
+   desc: Upgrade kubeadm node
+   cmd: "kubeadm upgrade node"
 
-  - id: kubeadm-certs-check-expiration
-    desc: Check kubeadm certificate expiration
-    cmd: "kubeadm certs check-expiration"
+ - id: kubeadm-certs-check-expiration
+   desc: Check kubeadm certificate expiration
+   cmd: "kubeadm certs check-expiration"
 
-  - id: kubeadm-join
-    desc: Join node to Kubernetes cluster
-    cmd: "kubeadm join <string:api-server> --token <string:token> --discovery-token-ca-cert-hash sha256:<string:hash>"
+ - id: kubeadm-join
+   desc: Join node to Kubernetes cluster
+   cmd: "kubeadm join <string:api-server> --token <string:token> --discovery-token-ca-cert-hash sha256:<string:hash>"
 
-  - id: kubeadm-upgrade-apply
-    desc: Apply Kubernetes upgrade
-    cmd: "kubeadm upgrade apply <string:version>"
+ - id: kubeadm-upgrade-apply
+   desc: Apply Kubernetes upgrade
+   cmd: "kubeadm upgrade apply <string:version>"
 
-  - id: etcdctl-endpoint-health
-    desc: Check etcd endpoint health
-    cmd: "etcdctl endpoint health"
+ - id: etcdctl-endpoint-health
+   desc: Check etcd endpoint health
+   cmd: "etcdctl endpoint health"
 
-  - id: etcdctl-member-list
-    desc: List etcd members
-    cmd: "etcdctl member list"
+ - id: etcdctl-member-list
+   desc: List etcd members
+   cmd: "etcdctl member list"
 
-  - id: etcdctl-endpoint-status
-    desc: Show etcd endpoint status
-    cmd: "etcdctl endpoint status"
+ - id: etcdctl-endpoint-status
+   desc: Show etcd endpoint status
+   cmd: "etcdctl endpoint status"
 
-  - id: sysctl-system
-    desc: Apply sysctl settings
-    cmd: "sysctl --system"
+ - id: sysctl-system
+   desc: Apply sysctl settings
+   cmd: "sysctl --system"
 
-  - id: swapoff-a
-    desc: Disable swap
-    cmd: "swapoff -a"
+ - id: swapoff-a
+   desc: Disable swap
+   cmd: "swapoff -a"
 
-  - id: getenforce
-    desc: Show SELinux status
-    cmd: "getenforce"
+ - id: getenforce
+   desc: Show SELinux status
+   cmd: "getenforce"
 
-  - id: setenforce-permissive
-    desc: Set SELinux to permissive
-    cmd: "setenforce 0"
+ - id: setenforce-permissive
+   desc: Set SELinux to permissive
+   cmd: "setenforce 0"
 
-  - id: crictl-info
-    desc: Show CRI information
-    cmd: "crictl info"
+ - id: crictl-info
+   desc: Show CRI information
+   cmd: "crictl info"
 
-  - id: crictl-ps
-    desc: List containers
-    cmd: "crictl ps"
+ - id: crictl-ps
+   desc: List containers
+   cmd: "crictl ps"
 
-  - id: crictl-ps-all
-    desc: List all containers
-    cmd: "crictl ps -a"
+ - id: crictl-ps-all
+   desc: List all containers
+   cmd: "crictl ps -a"
 
-  - id: crictl-images
-    desc: List CRI images
-    cmd: "crictl images"
+ - id: crictl-images
+   desc: List CRI images
+   cmd: "crictl images"
 
-  - id: crictl-logs
-    desc: Show container logs
-    cmd: "crictl logs <string:container>"
+ - id: crictl-logs
+   desc: Show container logs
+   cmd: "crictl logs <string:container>"
 
-  - id: crictl-inspect
-    desc: Inspect a container
-    cmd: "crictl inspect <string:container>"
+ - id: crictl-inspect
+   desc: Inspect a container
+   cmd: "crictl inspect <string:container>"
 
-  - id: ctr-tasks-ls
-    desc: List containerd tasks in k8s.io namespace
-    cmd: "ctr -n k8s.io task list"
+ - id: ctr-tasks-ls
+   desc: List containerd tasks in k8s.io namespace
+   cmd: "ctr -n k8s.io task list"
 
-  - id: ctr-containers-info
-    desc: Show containerd container info in k8s.io namespace
-    cmd: "ctr -n k8s.io containers info <string:container>"
+ - id: ctr-containers-info
+   desc: Show containerd container info in k8s.io namespace
+   cmd: "ctr -n k8s.io containers info <string:container>"
 
-  - id: ctr-images-ls
-    desc: List containerd images in k8s.io namespace
-    cmd: "ctr -n k8s.io images ls"
+ - id: ctr-images-ls
+   desc: List containerd images in k8s.io namespace
+   cmd: "ctr -n k8s.io images ls"
 
-  - id: ctr-containers-ls
-    desc: List containerd containers in k8s.io namespace
-    cmd: "ctr -n k8s.io containers ls"
+ - id: ctr-containers-ls
+   desc: List containerd containers in k8s.io namespace
+   cmd: "ctr -n k8s.io containers ls"
 
-  - id: journalctl-kubelet
-    desc: Show kubelet logs
-    cmd: "journalctl -u kubelet --no-pager"
+ - id: journalctl-kubelet
+   desc: Show kubelet logs
+   cmd: "journalctl -u kubelet --no-pager"
 
-  - id: journalctl-containerd
-    desc: Show containerd logs
-    cmd: "journalctl -u containerd --no-pager"
+ - id: journalctl-containerd
+   desc: Show containerd logs
+   cmd: "journalctl -u containerd --no-pager"
 
-  - id: journalctl-kubelet-lines
-    desc: Show kubelet logs with line count
-    cmd: "journalctl -u kubelet -n <number:lines> --no-pager"
+ - id: journalctl-kubelet-lines
+   desc: Show kubelet logs with line count
+   cmd: "journalctl -u kubelet -n <number:lines> --no-pager"
 
-  - id: journalctl-containerd-lines
-    desc: Show containerd logs with line count
-    cmd: "journalctl -u containerd -n <number:lines> --no-pager"
+ - id: journalctl-containerd-lines
+   desc: Show containerd logs with line count
+   cmd: "journalctl -u containerd -n <number:lines> --no-pager"
 
 matchers:
-  k8s-rpms:
-    type: rpmFiles
-    multiple: true
-    metadataNameIn:
-      - kubelet
-      - containerd
-      - containerd.io
-      - kubeadm
-      - cri-tools
-      - kubectl
-      - kubernetes-cni
+ k8s-rpms:
+   type: rpmFiles
+   multiple: true
+   metadataNameIn:
+     - kubelet
+     - containerd
+     - containerd.io
+     - kubeadm
+     - cri-tools
+     - kubectl
+     - kubernetes-cni
 
-  lines:
-    type: number
+ lines:
+   type: number
 
-  container:
-    type: string
+ container:
+   type: string
 
-  script:
-    type: string
-    pattern: '^(?:[a-zA-Z0-9_-]+/)*[a-zA-Z0-9_-]+\.sh$'
+ script:
+   type: string
+   pattern: '^(?:[a-zA-Z0-9_-]+/)*[a-zA-Z0-9_-]+\.sh$'
 
-  api-server:
-    type: string
-    pattern: '^[a-zA-Z0-9][a-zA-Z0-9.-]*:[0-9]+$'
+ api-server:
+   type: string
+   pattern: '^[a-zA-Z0-9][a-zA-Z0-9.-]*:[0-9]+$'
 
-  token:
-    type: string
-    pattern: '^[a-zA-Z0-9]{6}\.[a-zA-Z0-9]{16}$'
+ token:
+   type: string
+   pattern: '^[a-zA-Z0-9]{6}\.[a-zA-Z0-9]{16}$'
 
-  hash:
-    type: string
-    pattern: '^[a-fA-F0-9]{64}$'
+ hash:
+   type: string
+   pattern: '^[a-fA-F0-9]{64}$'
 
-  version:
-    type: string
-    pattern: '^v[0-9]+\.[0-9]+\.[0-9]+$'
+ version:
+   type: string
+   pattern: '^v[0-9]+\.[0-9]+\.[0-9]+$'
