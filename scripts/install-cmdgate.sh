@@ -45,6 +45,10 @@ chmod 0755 "${INSTALL_DIR}"
 chmod 0700 "${WORK_DIR}"
 chmod 0750 "${LOG_DIR}"
 
+SCRIPTS_DIR="${INSTALL_DIR}/scripts"
+mkdir -p "${SCRIPTS_DIR}"
+chmod 0750 "${SCRIPTS_DIR}"
+
 # shellcheck disable=SC2016
 cat > "${SUDOERS_FILE}" <<EOF
 ${CMDGATE_USER} ALL=(root) NOPASSWD: /opt/cmdgate/cmdgate-exec *

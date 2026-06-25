@@ -141,7 +141,7 @@ func (c *Config) ValidateSchema() error {
 
 	for name, def := range c.Matchers {
 		switch def.Type {
-		case "number", "rpmFiles":
+		case "number", "rpmFiles", "string":
 		default:
 			return fmt.Errorf("matcher %q: unsupported type %q", name, def.Type)
 		}

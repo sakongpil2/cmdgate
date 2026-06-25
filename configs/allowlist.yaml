@@ -46,6 +46,38 @@ commands:
     desc: Reload systemd daemon configuration
     cmd: "systemctl daemon-reload"
 
+  - id: systemctl-status-firewalld
+    desc: Show firewalld service status
+    cmd: "systemctl status firewalld"
+
+  - id: systemctl-disable-firewalld
+    desc: Disable firewalld service
+    cmd: "systemctl disable firewalld --now"
+
+  - id: systemctl-list-units
+    desc: List systemd units
+    cmd: "systemctl list-units"
+
+  - id: systemctl-list-unit-files
+    desc: List systemd unit files
+    cmd: "systemctl list-unit-files"
+
+  - id: systemctl-status-unit
+    desc: Show status of a specific systemd unit
+    cmd: "systemctl status <string:unit>"
+
+  - id: systemctl-restart-unit
+    desc: Restart a specific systemd unit
+    cmd: "systemctl restart <string:unit>"
+
+  - id: systemctl-mask-unit
+    desc: Mask a specific systemd unit
+    cmd: "systemctl mask <string:unit>"
+
+  - id: setup-oks-node
+    desc: Run OKS node initial setup script (root managed)
+    cmd: "/opt/cmdgate/scripts/setup-oks-node.sh"
+
   - id: dnf-install-kubelet
     desc: Install kubelet package
     cmd: "dnf install kubelet"
@@ -86,6 +118,78 @@ commands:
     desc: Check kubeadm certificate expiration
     cmd: "kubeadm certs check-expiration"
 
+  - id: etcdctl-endpoint-health
+    desc: Check etcd endpoint health
+    cmd: "etcdctl endpoint health"
+
+  - id: etcdctl-member-list
+    desc: List etcd members
+    cmd: "etcdctl member list"
+
+  - id: etcdctl-endpoint-status
+    desc: Show etcd endpoint status
+    cmd: "etcdctl endpoint status"
+
+  - id: cilium-status
+    desc: Show Cilium status
+    cmd: "cilium status"
+
+  - id: cilium-health
+    desc: Show Cilium health
+    cmd: "cilium health"
+
+  - id: hubble-status
+    desc: Show Hubble status
+    cmd: "hubble status"
+
+  - id: dig-short
+    desc: DNS lookup
+    cmd: "dig +short <string:hostname>"
+
+  - id: ip-addr
+    desc: Show network interfaces
+    cmd: "ip addr"
+
+  - id: ip-route
+    desc: Show routing table
+    cmd: "ip route"
+
+  - id: ss-listening
+    desc: Show listening sockets
+    cmd: "ss -tlnp"
+
+  - id: ps-aux
+    desc: List processes
+    cmd: "ps aux"
+
+  - id: df-h
+    desc: Show disk usage
+    cmd: "df -h"
+
+  - id: sysctl-system
+    desc: Apply sysctl settings
+    cmd: "sysctl --system"
+
+  - id: swapoff-a
+    desc: Disable swap
+    cmd: "swapoff -a"
+
+  - id: modprobe-br-netfilter
+    desc: Load br_netfilter module
+    cmd: "modprobe br_netfilter"
+
+  - id: getenforce
+    desc: Show SELinux status
+    cmd: "getenforce"
+
+  - id: setenforce-permissive
+    desc: Set SELinux to permissive
+    cmd: "setenforce 0"
+
+  - id: dnf-repolist
+    desc: List DNF repositories
+    cmd: "dnf repolist"
+
   - id: crictl-info
     desc: Show CRI information
     cmd: "crictl info"
@@ -94,9 +198,29 @@ commands:
     desc: List containers
     cmd: "crictl ps"
 
+  - id: crictl-ps-all
+    desc: List all containers
+    cmd: "crictl ps -a"
+
   - id: crictl-images
     desc: List CRI images
     cmd: "crictl images"
+
+  - id: crictl-logs
+    desc: Show container logs
+    cmd: "crictl logs <string:container>"
+
+  - id: crictl-inspect
+    desc: Inspect a container
+    cmd: "crictl inspect <string:container>"
+
+  - id: ctr-tasks-ls
+    desc: List containerd tasks in k8s.io namespace
+    cmd: "ctr -n k8s.io task list"
+
+  - id: ctr-containers-info
+    desc: Show containerd container info in k8s.io namespace
+    cmd: "ctr -n k8s.io containers info <string:container>"
 
   - id: ctr-images-ls
     desc: List containerd images in k8s.io namespace
@@ -113,6 +237,18 @@ commands:
   - id: journalctl-containerd
     desc: Show containerd logs
     cmd: "journalctl -u containerd --no-pager"
+
+  - id: journalctl-unit
+    desc: Show logs for a specific systemd unit
+    cmd: "journalctl -u <string:unit> --no-pager"
+
+  - id: journalctl-unit-lines
+    desc: Show logs for a specific systemd unit with line count
+    cmd: "journalctl -u <string:unit> -n <number:lines> --no-pager"
+
+  - id: journalctl-all
+    desc: Show all system logs
+    cmd: "journalctl --no-pager"
 
   - id: journalctl-kubelet-lines
     desc: Show kubelet logs with line count
@@ -137,3 +273,12 @@ matchers:
 
   lines:
     type: number
+
+  unit:
+    type: string
+
+  container:
+    type: string
+
+  hostname:
+    type: string

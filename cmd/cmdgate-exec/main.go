@@ -302,6 +302,11 @@ func (e *executor) validatePlaceholders(cfg *allowlist.Config, placeholders []al
 			if err := m.Validate(p.Value); err != nil {
 				return err
 			}
+		case "string":
+			m := matchers.StringMatcher{}
+			if err := m.Validate(p.Value); err != nil {
+				return err
+			}
 		case "rpmFiles":
 			return fmt.Errorf("rpmFiles matcher must be handled at command level, not single placeholder")
 		default:
