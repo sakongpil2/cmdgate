@@ -164,7 +164,7 @@ func (e *executor) runList() error {
 	}
 
 	for _, row := range rows {
-		fmt.Fprintf(os.Stdout, "%-*s  %-*s  %s\n", widths[0], row[0], widths[1], row[1], row[2])
+		printRow(widths, row)
 	}
 	return nil
 }
@@ -173,6 +173,20 @@ var ansiEscape = regexp.MustCompile(`\x1b\[[0-9;]*m`)
 
 func visibleWidth(s string) int {
 	return utf8.RuneCountInString(ansiEscape.ReplaceAllString(s, ""))
+}
+
+func printRow(widths []int, cells []string) {
+	for i, cell := range cells {
+		if i > 0 {
+			fmt.Print("  ")
+		}
+		fmt.Print(cell)
+		pad := widths[i] - visibleWidth(cell)
+		if pad > 0 {
+			fmt.Print(strings.Repeat(" ", pad))
+		}
+	}
+	fmt.Println()
 }
 
 // colors wraps ANSI escape sequences. When stdout is not a terminal or the
