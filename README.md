@@ -23,6 +23,9 @@ Supported commands:
 - `cmdgate run list`
 - `cmdgate policy validate --bundle <tar.gz>`
 - `cmdgate policy apply --bundle <tar.gz>`
+- `cmdgate audit tail [n]`
+- `cmdgate help`
+- `cmdgate --help`
 
 Internally it calls:
 
@@ -40,6 +43,9 @@ Supported commands:
 - `cmdgate-exec run list`
 - `cmdgate-exec policy validate --bundle <tar.gz>`
 - `cmdgate-exec policy apply --bundle <tar.gz>`
+- `cmdgate-exec audit tail [n]`
+- `cmdgate-exec help`
+- `cmdgate-exec --help`
 
 Main flow:
 
@@ -123,10 +129,20 @@ cmdgate run journalctl -u kubelet -n 50 --no-pager
 cmdgate policy validate --bundle cmdgate-policy-1.1.0.tar.gz
 ```
 
-### Apply a policy bundle
+### View audit log
 
 ```bash
-cmdgate policy apply --bundle cmdgate-policy-1.1.0.tar.gz
+cmdgate audit tail      # latest 20 entries
+cmdgate audit tail 50   # latest 50 entries
+```
+
+The output is JSON Lines from `/var/log/cmdgate/audit.log`.
+
+### Get help
+
+```bash
+cmdgate help
+cmdgate --help
 ```
 
 ## allowlist.yaml format
@@ -178,6 +194,25 @@ matchers:
 
 A placeholder in the form `<type:name>` delegates validation of that argument to a matcher.
 
+#### `string`
+
+Validates that the placeholder argument is a non-empty string. An optional
+`pattern` field restricts the value with a regular expression.
+
+```yaml
+cmd: "/opt/cmdgate/scripts/<string:script>"
+```
+
+```yaml
+matchers:
+  script:
+    type: string
+    pattern: '^(?:[a-zA-Z0-9_-]+/)*[a-zA-Z0-9_-]+\.sh$'
+```
+
+This example allows `backup.sh` or `maintenance/reboot.sh` while rejecting
+`..`, absolute paths, and non-`.sh` files.
+
 #### `number`
 
 Validates that the placeholder argument is a base-10 integer.
@@ -208,7 +243,7 @@ Log fields:
 
 - `timestamp`: Event time
 - `user`: The user who invoked the command
-- `action`: Action type (`run`, `policy_validate`, `policy_apply`)
+- `action`: Action type (`run`, `policy_validate`, `policy_apply`, `audit_tail`)
 - `command_id`: Matched allowlist command ID, if any
 - `command`: The command the user entered
 - `result`: `success` or `denied`

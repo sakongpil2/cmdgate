@@ -47,8 +47,8 @@ commands:
     cmd: "systemctl daemon-reload"
 
   - id: run-cmdgate-script
-    desc: Run a script under /opt/cmdgate
-    cmd: "/opt/cmdgate/<string:script>"
+    desc: Run a script under /opt/cmdgate/scripts
+    cmd: "/opt/cmdgate/scripts/<string:script>"
 
   - id: ls-cmdgate-dir
     desc: List a directory under /opt/cmdgate

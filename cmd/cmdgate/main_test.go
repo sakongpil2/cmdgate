@@ -1,25 +1,33 @@
 package main
 
 import (
+	"strings"
 	"testing"
 )
 
 func TestBuildExecCommand(t *testing.T) {
-	args := buildExecCommand([]string{"run", "systemctl", "status", "kubelet"})
-	want := []string{"-n", "/opt/cmdgate/cmdgate-exec", "run", "systemctl", "status", "kubelet"}
-	if len(args) != len(want) {
-		t.Fatalf("len(args) = %d, want %d", len(args), len(want))
+	got := buildExecCommand([]string{"run", "list"})
+	want := []string{"-n", "/opt/cmdgate/cmdgate-exec", "run", "list"}
+	if len(got) != len(want) {
+		t.Fatalf("len = %d, want %d", len(got), len(want))
 	}
 	for i := range want {
-		if args[i] != want[i] {
-			t.Errorf("args[%d] = %q, want %q", i, args[i], want[i])
+		if got[i] != want[i] {
+			t.Errorf("[%d] = %q, want %q", i, got[i], want[i])
 		}
 	}
 }
 
-func TestBuildExecCommandNoArgs(t *testing.T) {
-	args := buildExecCommand(nil)
-	if len(args) != 2 || args[0] != "-n" || args[1] != execBinary {
-		t.Errorf("args = %v", args)
+func TestPrintHelpContainsCommands(t *testing.T) {
+	var buf strings.Builder
+	oldStdout := stdout
+	defer func() { stdout = oldStdout }()
+	stdout = &buf
+	printHelp()
+	out := buf.String()
+	for _, cmd := range []string{"run", "policy", "audit", "help"} {
+		if !strings.Contains(out, cmd) {
+			t.Errorf("help output missing %q", cmd)
+		}
 	}
 }

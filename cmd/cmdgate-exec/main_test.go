@@ -262,6 +262,51 @@ commands:
 	}
 }
 
+func TestExecutorHandleAuditTail(t *testing.T) {
+	dir := t.TempDir()
+	auditLogPath := filepath.Join(dir, "audit.log")
+	content := "line one\nline two\nline three\n"
+	if err := os.WriteFile(auditLogPath, []byte(content), 0o644); err != nil {
+		t.Fatalf("write audit log: %v", err)
+	}
+
+	e := executor{auditLogPath: auditLogPath}
+	if err := e.handleAudit([]string{"tail", "2"}); err != nil {
+		t.Fatalf("handleAudit error: %v", err)
+	}
+}
+
+func TestExecutorHandleAuditTailDefault(t *testing.T) {
+	dir := t.TempDir()
+	auditLogPath := filepath.Join(dir, "audit.log")
+	if err := os.WriteFile(auditLogPath, []byte("line one\n"), 0o644); err != nil {
+		t.Fatalf("write audit log: %v", err)
+	}
+
+	e := executor{auditLogPath: auditLogPath}
+	if err := e.handleAudit([]string{"tail"}); err != nil {
+		t.Fatalf("handleAudit error: %v", err)
+	}
+}
+
+func TestExecutorHandleAuditTailMissingFile(t *testing.T) {
+	dir := t.TempDir()
+	auditLogPath := filepath.Join(dir, "audit.log")
+	e := executor{auditLogPath: auditLogPath}
+	if err := e.handleAudit([]string{"tail"}); err != nil {
+		t.Fatalf("handleAudit error: %v", err)
+	}
+}
+
+func TestExecutorHandleAuditTailInvalidCount(t *testing.T) {
+	dir := t.TempDir()
+	auditLogPath := filepath.Join(dir, "audit.log")
+	e := executor{auditLogPath: auditLogPath}
+	if err := e.handleAudit([]string{"tail", "abc"}); err == nil {
+		t.Fatalf("expected error for invalid count")
+	}
+}
+
 // createTempBundle builds a valid policy bundle tar.gz at a temporary path.
 func createTempBundle(t *testing.T, dir, allowlistContent string) string {
 	t.Helper()

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"os/user"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -32,9 +34,9 @@ type executor struct {
 }
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "usage: cmdgate-exec <run|policy> ...")
-		os.Exit(1)
+	if len(os.Args) < 2 || os.Args[1] == "help" || os.Args[1] == "--help" {
+		printHelp()
+		return
 	}
 	e := executor{allowlistPath: allowlistPath, auditLogPath: auditLogPath}
 	switch os.Args[1] {
@@ -48,10 +50,34 @@ func main() {
 			printError(err)
 			os.Exit(1)
 		}
+	case "audit":
+		if err := e.handleAudit(os.Args[2:]); err != nil {
+			printError(err)
+			os.Exit(1)
+		}
 	default:
 		fmt.Fprintf(os.Stderr, "unknown subcommand: %s\n", os.Args[1])
 		os.Exit(1)
 	}
+}
+
+func printHelp() {
+	fmt.Println(`CmdGate - allowlist-based privileged command executor
+
+Usage:
+  cmdgate-exec <command> [args...]
+
+Commands:
+  run     Run a pre-approved command
+  policy  Validate or apply a policy bundle
+  audit   View audit logs
+  help    Show this help message
+
+Examples:
+  cmdgate-exec run list
+  cmdgate-exec run systemctl restart kubelet
+  cmdgate-exec policy validate --bundle cmdgate-policy-1.1.0.tar.gz
+  cmdgate-exec audit tail 50`)
 }
 
 func printError(err error) {
@@ -242,6 +268,56 @@ func isTerminal(f *os.File) bool {
 		return false
 	}
 	return fi.Mode()&os.ModeCharDevice != 0
+}
+
+func (e *executor) handleAudit(args []string) error {
+	if len(args) == 0 || args[0] == "--help" {
+		return fmt.Errorf("usage: cmdgate-exec audit tail [n]")
+	}
+	if args[0] != "tail" {
+		return fmt.Errorf("unknown audit subcommand: %s", args[0])
+	}
+	limit := 20
+	if len(args) > 1 {
+		n, err := strconv.Atoi(args[1])
+		if err != nil || n <= 0 {
+			return fmt.Errorf("tail count must be a positive integer")
+		}
+		limit = n
+	}
+
+	entries, err := e.readAuditTail(limit)
+	if err != nil {
+		return err
+	}
+	for _, line := range entries {
+		fmt.Println(line)
+	}
+	return nil
+}
+
+func (e *executor) readAuditTail(limit int) ([]string, error) {
+	f, err := os.Open(e.auditLogPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("open audit log: %w", err)
+	}
+	defer f.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("read audit log: %w", err)
+	}
+	if len(lines) > limit {
+		lines = lines[len(lines)-limit:]
+	}
+	return lines, nil
 }
 
 func (e *executor) handlePolicy(args []string) error {

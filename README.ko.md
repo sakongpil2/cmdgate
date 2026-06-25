@@ -23,8 +23,11 @@ CmdGate는 운영자가 사전에 허용된 명령만 위임 권한으로 실행
 - `cmdgate run list`
 - `cmdgate policy validate --bundle <tar.gz>`
 - `cmdgate policy apply --bundle <tar.gz>`
+- `cmdgate audit tail [n]`
+- `cmdgate help`
+- `cmdgate --help`
 
-내부적으로는 다음 형태로 `cmdgate-exec`를 호출합니다.
+남부적으로는 다음 형태로 `cmdgate-exec`를 호출합니다.
 
 ```bash
 sudo -n /opt/cmdgate/cmdgate-exec <subcommand> [args...]
@@ -40,6 +43,9 @@ sudo -n /opt/cmdgate/cmdgate-exec <subcommand> [args...]
 - `cmdgate-exec run list`
 - `cmdgate-exec policy validate --bundle <tar.gz>`
 - `cmdgate-exec policy apply --bundle <tar.gz>`
+- `cmdgate-exec audit tail [n]`
+- `cmdgate-exec help`
+- `cmdgate-exec --help`
 
 주요 동작:
 
@@ -123,10 +129,20 @@ cmdgate run journalctl -u kubelet -n 50 --no-pager
 cmdgate policy validate --bundle cmdgate-policy-1.1.0.tar.gz
 ```
 
-### 정책 번들 적용
+### 감사 로그 조회
 
 ```bash
-cmdgate policy apply --bundle cmdgate-policy-1.1.0.tar.gz
+cmdgate audit tail      # 최근 20개 항목
+cmdgate audit tail 50   # 최근 50개 항목
+```
+
+출력은 `/var/log/cmdgate/audit.log`의 JSON Lines 형식 그대로입니다.
+
+### 도움말 보기
+
+```bash
+cmdgate help
+cmdgate --help
 ```
 
 ## allowlist.yaml 형식
@@ -178,6 +194,25 @@ matchers:
 
 `<type:name>` 형태의 placeholder는 해당 위치 인자를 matcher에 위임하여 검증합니다.
 
+#### `string`
+
+placeholder 위치의 인자가 비어 있지 않은 문자열인지 검증합니다. 선택적 `pattern`
+필드로 정규식을 지정하면 값을 추가로 제한할 수 있습니다.
+
+```yaml
+cmd: "/opt/cmdgate/scripts/<string:script>"
+```
+
+```yaml
+matchers:
+  script:
+    type: string
+    pattern: '^(?:[a-zA-Z0-9_-]+/)*[a-zA-Z0-9_-]+\.sh$'
+```
+
+이 예시는 `backup.sh`, `maintenance/reboot.sh`는 허용하면서 `..`, 절대 경로,
+`.sh`가 아닌 파일은 거부합니다.
+
 #### `number`
 
 placeholder 위치의 인자가 10진수 정수인지 검증합니다.
@@ -208,7 +243,7 @@ cmd: "dnf install <rpmFiles:k8s-rpms>"
 
 - `timestamp`: 이벤트 발생 시각
 - `user`: 명령을 실행한 사용자
-- `action`: 수행한 동작 (`run`, `policy_validate`, `policy_apply` 등)
+- `action`: 수행한 동작 (`run`, `policy_validate`, `policy_apply`, `audit_tail` 등)
 - `command_id`: allowlist에서 매칭된 명령 ID
 - `command`: 사용자가 입력한 명령
 - `result`: 실행 결과 (`success` 또는 `denied`)

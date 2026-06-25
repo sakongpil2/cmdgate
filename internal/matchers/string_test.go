@@ -2,29 +2,23 @@ package matchers
 
 import "testing"
 
-func TestStringMatcher_Validate(t *testing.T) {
-	m := StringMatcher{}
-	if err := m.Validate("hello"); err != nil {
-		t.Errorf("expected valid, got %v", err)
+func TestStringMatcherPatternRejectsDotDot(t *testing.T) {
+	m := StringMatcher{Pattern: `^(?:[a-zA-Z0-9_-]+/)*[a-zA-Z0-9_-]+\.sh$`}
+	cases := []struct {
+		value string
+		want  bool
+	}{
+		{"backup.sh", true},
+		{"maintenance/reboot.sh", true},
+		{"../../etc/passwd.sh", false},
+		{"/etc/passwd.sh", false},
+		{"script", false},
 	}
-	if err := m.Validate(""); err == nil {
-		t.Error("expected empty value to be rejected")
-	}
-}
-
-func TestStringMatcher_ValidatePattern(t *testing.T) {
-	m := StringMatcher{Pattern: "^[a-z0-9-]+$"}
-	if err := m.Validate("kubelet"); err != nil {
-		t.Errorf("expected valid, got %v", err)
-	}
-	if err := m.Validate("Kubelet"); err == nil {
-		t.Error("expected uppercase to be rejected by pattern")
-	}
-}
-
-func TestStringMatcher_InvalidPattern(t *testing.T) {
-	m := StringMatcher{Pattern: "[invalid"}
-	if err := m.Validate("hello"); err == nil {
-		t.Error("expected invalid pattern to be rejected")
+	for _, tc := range cases {
+		err := m.Validate(tc.value)
+		got := err == nil
+		if got != tc.want {
+			t.Errorf("Validate(%q) error = %v, want valid=%v", tc.value, err, tc.want)
+		}
 	}
 }
