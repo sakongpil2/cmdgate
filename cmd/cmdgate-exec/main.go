@@ -6,8 +6,9 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"regexp"
 	"strings"
-	"text/tabwriter"
+	"unicode/utf8"
 
 	"github.com/example/cmdgate/internal/allowlist"
 	"github.com/example/cmdgate/internal/audit"
@@ -142,20 +143,36 @@ func (e *executor) runList() error {
 	}
 
 	colors := newColors(os.Stdout)
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintf(w, "%s\t%s\t%s\n",
-		colors.header("ID"),
-		colors.header("DESCRIPTION"),
-		colors.header("COMMAND"),
-	)
+	rows := [][]string{
+		{colors.header("ID"), colors.header("DESCRIPTION"), colors.header("COMMAND")},
+	}
 	for _, c := range cfg.Commands {
-		fmt.Fprintf(w, "%s\t%s\t%s\n",
+		rows = append(rows, []string{
 			colors.id(c.ID),
 			colors.desc(c.Desc),
 			colors.cmd(c.Cmd),
-		)
+		})
 	}
-	return w.Flush()
+
+	widths := make([]int, 3)
+	for _, row := range rows {
+		for i, cell := range row {
+			if w := visibleWidth(cell); w > widths[i] {
+				widths[i] = w
+			}
+		}
+	}
+
+	for _, row := range rows {
+		fmt.Fprintf(os.Stdout, "%-*s  %-*s  %s\n", widths[0], row[0], widths[1], row[1], row[2])
+	}
+	return nil
+}
+
+var ansiEscape = regexp.MustCompile(`\x1b\[[0-9;]*m`)
+
+func visibleWidth(s string) int {
+	return utf8.RuneCountInString(ansiEscape.ReplaceAllString(s, ""))
 }
 
 // colors wraps ANSI escape sequences. When stdout is not a terminal or the
