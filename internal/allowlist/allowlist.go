@@ -2,6 +2,8 @@
 package allowlist
 
 import (
+	"strings"
+
 	"gopkg.in/yaml.v3"
 )
 
@@ -37,4 +39,33 @@ func Parse(data []byte) (*Config, error) {
 		return nil, err
 	}
 	return &cfg, nil
+}
+
+// FindCommand returns the first command in the allowlist that matches argv.
+// A command matches when every fixed token equals the corresponding argv
+// element and every placeholder token (<...>) matches any single value.
+func (c *Config) FindCommand(argv []string) (Command, bool) {
+	for _, cmd := range c.Commands {
+		parts := strings.Fields(cmd.Cmd)
+		if len(parts) != len(argv) {
+			continue
+		}
+		match := true
+		for i, p := range parts {
+			if !isPlaceholder(p) && p != argv[i] {
+				match = false
+				break
+			}
+		}
+		if match {
+			return cmd, true
+		}
+	}
+	return Command{}, false
+}
+
+// isPlaceholder reports whether s is a matcher placeholder token such as
+// "<rpmFiles:k8s-rpms>".
+func isPlaceholder(s string) bool {
+	return strings.HasPrefix(s, "<") && strings.HasSuffix(s, ">")
 }

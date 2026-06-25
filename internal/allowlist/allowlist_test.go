@@ -4,6 +4,62 @@ import (
 	"testing"
 )
 
+func TestFindExactMatch(t *testing.T) {
+	input := `
+commands:
+  - id: restart-kubelet
+    cmd: "systemctl restart kubelet"
+  - id: stop-kubelet
+    cmd: "systemctl stop kubelet"
+`
+	cfg, err := Parse([]byte(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	cmd, ok := cfg.FindCommand([]string{"systemctl", "restart", "kubelet"})
+	if !ok {
+		t.Fatalf("expected match")
+	}
+	if cmd.ID != "restart-kubelet" {
+		t.Errorf("id = %q, want restart-kubelet", cmd.ID)
+	}
+}
+
+func TestFindNoMatch(t *testing.T) {
+	input := `
+commands:
+  - id: restart-kubelet
+    cmd: "systemctl restart kubelet"
+`
+	cfg, err := Parse([]byte(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	_, ok := cfg.FindCommand([]string{"systemctl", "restart", "sshd"})
+	if ok {
+		t.Errorf("expected no match")
+	}
+}
+
+func TestFindWithPlaceholderWildcard(t *testing.T) {
+	input := `
+commands:
+  - id: journalctl-lines
+    cmd: "journalctl -u kubelet -n <number:lines> --no-pager"
+`
+	cfg, err := Parse([]byte(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	cmd, ok := cfg.FindCommand([]string{"journalctl", "-u", "kubelet", "-n", "50", "--no-pager"})
+	if !ok {
+		t.Fatalf("expected match")
+	}
+	if cmd.ID != "journalctl-lines" {
+		t.Errorf("id = %q, want journalctl-lines", cmd.ID)
+	}
+}
+
 func TestParse(t *testing.T) {
 	tests := []struct {
 		name    string
