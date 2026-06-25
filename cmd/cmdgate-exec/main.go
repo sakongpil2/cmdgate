@@ -1,8 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/user"
 	"strings"
 
@@ -103,7 +105,7 @@ func (e *executor) handleRun(args []string) error {
 		}
 	}
 
-	out, err := runner.Run(args[0], args[1:])
+	err = runner.RunWithIO(args[0], args[1:], os.Stdin, os.Stdout, os.Stderr)
 	result := "success"
 	reason := ""
 	if err != nil {
@@ -113,10 +115,14 @@ func (e *executor) handleRun(args []string) error {
 	if auditErr := e.writeAudit(audit.LogEntry{Action: "run", CommandID: cmd.ID, Command: strings.Join(args, " "), Result: result, Reason: reason}); auditErr != nil {
 		fmt.Fprintf(os.Stderr, "audit log warning: %v\n", auditErr)
 	}
-	if len(out) > 0 {
-		fmt.Print(string(out))
+	if err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			os.Exit(exitErr.ExitCode())
+		}
+		return err
 	}
-	return err
+	return nil
 }
 
 func (e *executor) runList() error {
@@ -147,12 +153,18 @@ func (e *executor) handlePolicy(args []string) error {
 	}
 	switch action {
 	case "validate":
-		return policy.ValidateBundle(bundle)
+		if err := policy.ValidateBundle(bundle); err != nil {
+			return err
+		}
+		if err := e.writeAudit(audit.LogEntry{Action: "policy_validate", CommandID: bundle, Command: bundle, Result: "success"}); err != nil {
+			fmt.Fprintf(os.Stderr, "audit log warning: %v\n", err)
+		}
+		return nil
 	case "apply":
 		if err := policy.ApplyBundle(bundle, e.allowlistPath); err != nil {
 			return err
 		}
-		if err := e.writeAudit(audit.LogEntry{Action: "policy apply", CommandID: bundle, Command: bundle, Result: "success"}); err != nil {
+		if err := e.writeAudit(audit.LogEntry{Action: "policy_apply", CommandID: bundle, Command: bundle, Result: "success"}); err != nil {
 			fmt.Fprintf(os.Stderr, "audit log warning: %v\n", err)
 		}
 		return nil
@@ -166,7 +178,14 @@ func (e *executor) loadConfig() (*allowlist.Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read allowlist: %w", err)
 	}
-	return allowlist.Parse(data)
+	cfg, err := allowlist.Parse(data)
+	if err != nil {
+		return nil, err
+	}
+	if err := cfg.ValidateSchema(); err != nil {
+		return nil, fmt.Errorf("invalid allowlist schema: %w", err)
+	}
+	return cfg, nil
 }
 
 func (e *executor) validatePlaceholders(cfg *allowlist.Config, placeholders []allowlist.Placeholder) error {
@@ -174,6 +193,9 @@ func (e *executor) validatePlaceholders(cfg *allowlist.Config, placeholders []al
 		def, ok := cfg.Matchers[p.Name]
 		if !ok {
 			return fmt.Errorf("unknown matcher: %s", p.Name)
+		}
+		if p.Type != "" && p.Type != def.Type {
+			return fmt.Errorf("placeholder type %q does not match matcher type %q", p.Type, def.Type)
 		}
 		switch def.Type {
 		case "number":
@@ -198,7 +220,11 @@ func validateRpmFiles(cfg *allowlist.Config, name string, paths []string) error 
 	if def.Type != "rpmFiles" {
 		return fmt.Errorf("unsupported matcher type: %s", def.Type)
 	}
-	m := matchers.RpmFilesMatcher{MetadataNameIn: def.MetadataNameIn}
+	m := matchers.RpmFilesMatcher{
+		MetadataNameIn: def.MetadataNameIn,
+		Multiple:       def.Multiple,
+		AllowedDirs:    def.AllowedDirs,
+	}
 	return m.Validate(paths)
 }
 
@@ -213,7 +239,8 @@ func (e *executor) findTrailingRpmFiles(cfg *allowlist.Config, argv []string) (a
 			continue
 		}
 		last := parts[len(parts)-1]
-		if !isPlaceholder(last) {
+		_, name, ok := allowlist.PlaceholderParts(last)
+		if !ok {
 			continue
 		}
 		fixed := parts[:len(parts)-1]
@@ -230,7 +257,6 @@ func (e *executor) findTrailingRpmFiles(cfg *allowlist.Config, argv []string) (a
 		if !match {
 			continue
 		}
-		name := placeholderName(last)
 		def, ok := cfg.Matchers[name]
 		if !ok || def.Type != "rpmFiles" {
 			continue
@@ -240,27 +266,22 @@ func (e *executor) findTrailingRpmFiles(cfg *allowlist.Config, argv []string) (a
 	return allowlist.Command{}, "", nil, false
 }
 
-func isPlaceholder(s string) bool {
-	return strings.HasPrefix(s, "<") && strings.HasSuffix(s, ">")
-}
-
-func placeholderName(s string) string {
-	name := strings.TrimSuffix(strings.TrimPrefix(s, "<"), ">")
-	if idx := strings.Index(name, ":"); idx >= 0 {
-		name = name[idx+1:]
-	}
-	return name
-}
-
 func (e *executor) writeAudit(entry audit.LogEntry) error {
-	u, _ := user.Current()
-	if u != nil {
-		entry.User = u.Username
-	}
+	entry.User = effectiveUser()
 	w, err := audit.NewWriter(e.auditLogPath)
 	if err != nil {
 		return err
 	}
 	defer w.Close()
 	return w.Write(entry)
+}
+
+func effectiveUser() string {
+	if u := os.Getenv("SUDO_USER"); u != "" {
+		return u
+	}
+	if u, err := user.Current(); err == nil && u != nil {
+		return u.Username
+	}
+	return ""
 }

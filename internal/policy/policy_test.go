@@ -102,6 +102,24 @@ func TestApplyBundle(t *testing.T) {
 	}
 }
 
+func TestApplyBundleSurfacesStatError(t *testing.T) {
+	dir := t.TempDir()
+	bundle := filepath.Join(dir, "bundle.tar.gz")
+	createBundle(t, bundle, "1.1.0", false)
+
+	// Create a regular file and then use a path "inside" it so os.Stat returns
+	// a "not a directory" error rather than os.ErrNotExist.
+	fileTarget := filepath.Join(dir, "notadir")
+	if err := os.WriteFile(fileTarget, []byte("existing"), 0o640); err != nil {
+		t.Fatal(err)
+	}
+	target := filepath.Join(fileTarget, "allowlist.yaml")
+
+	if err := ApplyBundle(bundle, target); err == nil {
+		t.Error("expected error when target stat fails")
+	}
+}
+
 func createBundle(t *testing.T, path, version string, omitChecksum bool) {
 	t.Helper()
 	allowlistBody := "version: " + version + "\nmode: allowlist-only\ncommands: []\n"

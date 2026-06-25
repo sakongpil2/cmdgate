@@ -15,6 +15,7 @@ func TestRpmFilesMatcherAllAllowed(t *testing.T) {
 
 	m := RpmFilesMatcher{
 		MetadataNameIn: []string{"kubelet", "kubeadm"},
+		Multiple:       true,
 		RpmQuery:       fakeRpmQuery,
 	}
 	if err := m.Validate([]string{filepath.Join(dir, "kubelet-1.rpm"), filepath.Join(dir, "kubeadm-1.rpm")}); err != nil {
@@ -89,6 +90,47 @@ func TestRpmFilesMatcherEmptyQueryOutput(t *testing.T) {
 	}
 	if err := m.Validate([]string{filepath.Join(dir, "kubelet-1.rpm")}); err == nil {
 		t.Error("expected empty query output to be rejected")
+	}
+}
+
+func TestRpmFilesMatcherRejectsMultipleWhenNotAllowed(t *testing.T) {
+	dir := t.TempDir()
+	createFakeRPM(t, filepath.Join(dir, "kubelet-1.rpm"), "kubelet")
+	createFakeRPM(t, filepath.Join(dir, "kubeadm-1.rpm"), "kubeadm")
+
+	m := RpmFilesMatcher{
+		MetadataNameIn: []string{"kubelet", "kubeadm"},
+		Multiple:       false,
+		RpmQuery:       fakeRpmQuery,
+	}
+	if err := m.Validate([]string{
+		filepath.Join(dir, "kubelet-1.rpm"),
+		filepath.Join(dir, "kubeadm-1.rpm"),
+	}); err == nil {
+		t.Error("expected multiple paths to be rejected when Multiple=false")
+	}
+}
+
+func TestRpmFilesMatcherAllowedDirs(t *testing.T) {
+	dir := t.TempDir()
+	sub := filepath.Join(dir, "rpms")
+	if err := os.MkdirAll(sub, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	createFakeRPM(t, filepath.Join(sub, "kubelet-1.rpm"), "kubelet")
+
+	m := RpmFilesMatcher{
+		MetadataNameIn: []string{"kubelet"},
+		AllowedDirs:    []string{sub},
+		RpmQuery:       fakeRpmQuery,
+	}
+	if err := m.Validate([]string{filepath.Join(sub, "kubelet-1.rpm")}); err != nil {
+		t.Errorf("expected allowed dir path to be accepted, got %v", err)
+	}
+
+	m.AllowedDirs = []string{"/other"}
+	if err := m.Validate([]string{filepath.Join(sub, "kubelet-1.rpm")}); err == nil {
+		t.Error("expected path outside allowed dirs to be rejected")
 	}
 }
 

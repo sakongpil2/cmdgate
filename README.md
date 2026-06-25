@@ -82,7 +82,7 @@ The installer performs the following:
 After installation the following sudoers rule is active:
 
 ```sudoers
-cmdgateadm ALL=(ALL) NOPASSWD: /opt/cmdgate/cmdgate-exec *
+cmdgateadm ALL=(root) NOPASSWD: /opt/cmdgate/cmdgate-exec *
 ```
 
 If the `cmdgateadm` user does not exist, the installer prints a warning. The sudoers rule only becomes effective after an administrator creates that user.
@@ -208,7 +208,7 @@ Log fields:
 - The sudoers rule should allow only the `cmdgateadm` user to run `/opt/cmdgate/cmdgate-exec`:
 
 ```sudoers
-cmdgateadm ALL=(ALL) NOPASSWD: /opt/cmdgate/cmdgate-exec *
+cmdgateadm ALL=(root) NOPASSWD: /opt/cmdgate/cmdgate-exec *
 ```
 
 - Policy bundles are validated against a manifest and SHA-256 checksum before being applied.

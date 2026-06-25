@@ -231,6 +231,37 @@ matchers:
 	}
 }
 
+func TestExecutorHandleRunAuditUser(t *testing.T) {
+	dir := t.TempDir()
+	allowlistPath := filepath.Join(dir, "allowlist.yaml")
+	auditLogPath := filepath.Join(dir, "audit.log")
+	content := `
+version: "1.0.0"
+mode: allowlist-only
+commands:
+  - id: echo-hello
+    desc: say hello
+    cmd: "echo hello"
+`
+	if err := os.WriteFile(allowlistPath, []byte(content), 0o644); err != nil {
+		t.Fatalf("write allowlist: %v", err)
+	}
+
+	t.Setenv("SUDO_USER", "alice")
+	e := executor{allowlistPath: allowlistPath, auditLogPath: auditLogPath}
+	if err := e.handleRun([]string{"echo", "hello"}); err != nil {
+		t.Fatalf("handleRun error: %v", err)
+	}
+
+	line, err := os.ReadFile(auditLogPath)
+	if err != nil {
+		t.Fatalf("read audit: %v", err)
+	}
+	if !strings.Contains(string(line), "user=alice") {
+		t.Errorf("audit log missing SUDO_USER; got %q", string(line))
+	}
+}
+
 // createTempBundle builds a valid policy bundle tar.gz at a temporary path.
 func createTempBundle(t *testing.T, dir, allowlistContent string) string {
 	t.Helper()

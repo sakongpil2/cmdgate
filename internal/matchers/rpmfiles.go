@@ -12,6 +12,11 @@ import (
 type RpmFilesMatcher struct {
 	// MetadataNameIn is the allowlist of RPM NAME values permitted by this matcher.
 	MetadataNameIn []string
+	// Multiple allows more than one RPM path to be supplied at once.
+	Multiple bool
+	// AllowedDirs restricts RPM paths to the given directory prefixes.
+	// When empty, only the absolute-path check is enforced.
+	AllowedDirs []string
 	// RpmQuery returns the query string for a given RPM file path.
 	// When nil, defaultRpmQuery is used.
 	RpmQuery func(path string) (string, error)
@@ -19,12 +24,19 @@ type RpmFilesMatcher struct {
 
 // Validate ensures every RPM file path is absolute and its NAME is allowed.
 func (r *RpmFilesMatcher) Validate(paths []string) error {
+	if !r.Multiple && len(paths) > 1 {
+		return fmt.Errorf("multiple rpm files not allowed")
+	}
 	if r.RpmQuery == nil {
 		r.RpmQuery = defaultRpmQuery
 	}
 	for _, p := range paths {
 		if !filepath.IsAbs(p) {
 			return fmt.Errorf("rpm path must be absolute: %q", p)
+		}
+		clean := filepath.Clean(p)
+		if len(r.AllowedDirs) > 0 && !hasAllowedPrefix(clean, r.AllowedDirs) {
+			return fmt.Errorf("rpm path %q is not under allowed directories", p)
 		}
 		out, err := r.RpmQuery(p)
 		if err != nil {
@@ -40,6 +52,15 @@ func (r *RpmFilesMatcher) Validate(paths []string) error {
 		}
 	}
 	return nil
+}
+
+func hasAllowedPrefix(path string, dirs []string) bool {
+	for _, d := range dirs {
+		if strings.HasPrefix(path, filepath.Clean(d)) {
+			return true
+		}
+	}
+	return false
 }
 
 func (r *RpmFilesMatcher) allowed(name string) bool {

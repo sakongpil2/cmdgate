@@ -2,6 +2,7 @@
 package allowlist
 
 import (
+	"fmt"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -29,6 +30,7 @@ type Matchers map[string]MatcherDef
 type MatcherDef struct {
 	Type           string   `yaml:"type"`
 	Multiple       bool     `yaml:"multiple"`
+	AllowedDirs    []string `yaml:"allowedDirs"`
 	MetadataNameIn []string `yaml:"metadataNameIn"`
 }
 
@@ -45,34 +47,20 @@ func Parse(data []byte) (*Config, error) {
 // A command matches when every fixed token equals the corresponding argv
 // element and every placeholder token (<...>) matches any single value.
 func (c *Config) FindCommand(argv []string) (Command, bool) {
-	for _, cmd := range c.Commands {
-		parts := strings.Fields(cmd.Cmd)
-		if len(parts) != len(argv) {
-			continue
-		}
-		match := true
-		for i, p := range parts {
-			if !isPlaceholder(p) && p != argv[i] {
-				match = false
-				break
-			}
-		}
-		if match {
-			return cmd, true
-		}
-	}
-	return Command{}, false
+	cmd, _, ok := c.FindCommandWithPlaceholders(argv)
+	return cmd, ok
 }
 
-// Placeholder captures the name and matched value of a <type:name>
+// Placeholder captures the type, name and matched value of a <type:name>
 // placeholder token found in an allowlist command.
 type Placeholder struct {
+	Type  string
 	Name  string
 	Value string
 }
 
 // FindCommandWithPlaceholders returns the first command that matches argv and
-// also extracts every <type:name> placeholder's name and the argv value it
+// also extracts every <type:name> placeholder's type, name and the argv value it
 // matched. It behaves like FindCommand but returns placeholder metadata.
 func (c *Config) FindCommandWithPlaceholders(argv []string) (Command, []Placeholder, bool) {
 	for _, cmd := range c.Commands {
@@ -83,12 +71,8 @@ func (c *Config) FindCommandWithPlaceholders(argv []string) (Command, []Placehol
 		var placeholders []Placeholder
 		match := true
 		for i, p := range parts {
-			if isPlaceholder(p) {
-				name := strings.TrimSuffix(strings.TrimPrefix(p, "<"), ">")
-				if idx := strings.Index(name, ":"); idx >= 0 {
-					name = name[idx+1:]
-				}
-				placeholders = append(placeholders, Placeholder{Name: name, Value: argv[i]})
+			if typ, name, ok := PlaceholderParts(p); ok {
+				placeholders = append(placeholders, Placeholder{Type: typ, Name: name, Value: argv[i]})
 				continue
 			}
 			if p != argv[i] {
@@ -103,8 +87,65 @@ func (c *Config) FindCommandWithPlaceholders(argv []string) (Command, []Placehol
 	return Command{}, nil, false
 }
 
-// isPlaceholder reports whether s is a matcher placeholder token such as
+// IsPlaceholder reports whether s is a matcher placeholder token such as
 // "<rpmFiles:k8s-rpms>".
-func isPlaceholder(s string) bool {
+func IsPlaceholder(s string) bool {
 	return strings.HasPrefix(s, "<") && strings.HasSuffix(s, ">")
+}
+
+// PlaceholderParts returns the type and name parts of a placeholder token.
+// For "<number:lines>" it returns ("number", "lines", true).
+// For "<lines>" it returns ("", "lines", true).
+// For non-placeholder tokens it returns ("", "", false).
+func PlaceholderParts(s string) (typ, name string, ok bool) {
+	if !IsPlaceholder(s) {
+		return "", "", false
+	}
+	inner := strings.TrimSuffix(strings.TrimPrefix(s, "<"), ">")
+	if idx := strings.Index(inner, ":"); idx >= 0 {
+		return inner[:idx], inner[idx+1:], true
+	}
+	return "", inner, true
+}
+
+// ValidateSchema checks that the allowlist has required fields, uses supported
+// matcher types, and that every placeholder references a defined matcher whose
+// type matches the placeholder prefix.
+func (c *Config) ValidateSchema() error {
+	if c.Version == "" {
+		return fmt.Errorf("allowlist version is required")
+	}
+	if c.Mode != "allowlist-only" {
+		return fmt.Errorf("allowlist mode must be allowlist-only, got %q", c.Mode)
+	}
+
+	for i, cmd := range c.Commands {
+		if cmd.ID == "" {
+			return fmt.Errorf("command[%d]: id is required", i)
+		}
+		if cmd.Cmd == "" {
+			return fmt.Errorf("command[%d]: cmd is required", i)
+		}
+		for _, token := range strings.Fields(cmd.Cmd) {
+			if typ, name, ok := PlaceholderParts(token); ok {
+				def, exists := c.Matchers[name]
+				if !exists {
+					return fmt.Errorf("command[%d]: unknown matcher %q", i, name)
+				}
+				if typ != "" && typ != def.Type {
+					return fmt.Errorf("command[%d]: placeholder type %q does not match matcher type %q", i, typ, def.Type)
+				}
+			}
+		}
+	}
+
+	for name, def := range c.Matchers {
+		switch def.Type {
+		case "number", "rpmFiles":
+		default:
+			return fmt.Errorf("matcher %q: unsupported type %q", name, def.Type)
+		}
+	}
+
+	return nil
 }

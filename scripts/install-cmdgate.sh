@@ -39,7 +39,7 @@ chmod 0700 "${WORK_DIR}"
 chmod 0750 "${LOG_DIR}"
 
 cat > "${SUDOERS_FILE}" <<'EOF'
-cmdgateadm ALL=(ALL) NOPASSWD: /opt/cmdgate/cmdgate-exec *
+cmdgateadm ALL=(root) NOPASSWD: /opt/cmdgate/cmdgate-exec *
 EOF
 
 chmod 0440 "${SUDOERS_FILE}"

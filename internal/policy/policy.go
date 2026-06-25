@@ -34,14 +34,23 @@ func ApplyBundle(bundlePath, targetPath string) error {
 	}
 
 	backup := targetPath + ".backup"
-	if _, err := os.Stat(targetPath); err == nil {
+	hasBackup := false
+
+	if _, err := os.Stat(targetPath); err != nil {
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("stat target failed: %w", err)
+		}
+	} else {
 		if err := os.Rename(targetPath, backup); err != nil {
 			return fmt.Errorf("backup failed: %w", err)
 		}
+		hasBackup = true
 	}
 
 	if err := os.WriteFile(targetPath, allowlist, 0o640); err != nil {
-		_ = os.Rename(backup, targetPath)
+		if hasBackup {
+			_ = os.Rename(backup, targetPath)
+		}
 		return fmt.Errorf("write target failed: %w", err)
 	}
 	return nil
@@ -108,8 +117,12 @@ func extractAndVerify(bundlePath string) (allowlistBytes []byte, manifest Manife
 	if sum != checksum {
 		return nil, manifest, fmt.Errorf("checksum mismatch")
 	}
-	if _, err := allowlist.Parse(allowlistBytes); err != nil {
+	cfg, err := allowlist.Parse(allowlistBytes)
+	if err != nil {
 		return nil, manifest, fmt.Errorf("invalid allowlist.yaml: %w", err)
+	}
+	if err := cfg.ValidateSchema(); err != nil {
+		return nil, manifest, fmt.Errorf("invalid allowlist schema: %w", err)
 	}
 	return allowlistBytes, manifest, nil
 }

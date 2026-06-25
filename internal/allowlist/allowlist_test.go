@@ -218,3 +218,60 @@ matchers:
 		})
 	}
 }
+
+func TestValidateSchema(t *testing.T) {
+	cfg, err := Parse([]byte(`
+version: 1.0.0
+mode: allowlist-only
+commands:
+  - id: ok
+    cmd: "echo ok"
+`))
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+	if err := cfg.ValidateSchema(); err != nil {
+		t.Errorf("unexpected schema error: %v", err)
+	}
+}
+
+func TestValidateSchemaRejectsMissingVersion(t *testing.T) {
+	cfg, err := Parse([]byte(`
+mode: allowlist-only
+commands: []
+`))
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+	if err := cfg.ValidateSchema(); err == nil {
+		t.Error("expected error for missing version")
+	}
+}
+
+func TestValidateSchemaRejectsUnknownMatcher(t *testing.T) {
+	cfg, err := Parse([]byte(`
+version: 1.0.0
+mode: allowlist-only
+commands:
+  - id: bad
+    cmd: "echo <number:missing>"
+matchers: {}
+`))
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+	if err := cfg.ValidateSchema(); err == nil {
+		t.Error("expected error for unknown matcher")
+	}
+}
+
+func TestPlaceholderParts(t *testing.T) {
+	typ, name, ok := PlaceholderParts("<number:lines>")
+	if !ok || typ != "number" || name != "lines" {
+		t.Errorf("PlaceholderParts = (%q, %q, %v), want (number, lines, true)", typ, name, ok)
+	}
+	typ, name, ok = PlaceholderParts("plain")
+	if ok {
+		t.Errorf("PlaceholderParts(plain) = ok, want not ok")
+	}
+}

@@ -14,12 +14,12 @@ func TestWriteLog(t *testing.T) {
 		t.Fatalf("new writer error: %v", err)
 	}
 	defer w.Close()
-	if err := w.Write(LogEntry{User: "opsadm", Action: "run", CommandID: "x", Command: "y", Result: "success"}); err != nil {
+	if err := w.Write(LogEntry{User: "cmdgateadm", Action: "run", CommandID: "x", Command: "y", Result: "success"}); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
 	line := readLine(t, f)
-	if !strings.Contains(line, `user=opsadm`) {
+	if !strings.Contains(line, `user=cmdgateadm`) {
 		t.Errorf("missing user, got %q", line)
 	}
 	if !strings.Contains(line, `result=success`) {

@@ -24,7 +24,7 @@ CmdGate는 운영자가 사전에 허용된 명령만 위임 권한으로 실행
 - `cmdgate policy validate --bundle <tar.gz>`
 - `cmdgate policy apply --bundle <tar.gz>`
 
-낶부적으로는 다음 형태로 `cmdgate-exec`를 호출합니다.
+내부적으로는 다음 형태로 `cmdgate-exec`를 호출합니다.
 
 ```bash
 sudo -n /opt/cmdgate/cmdgate-exec <subcommand> [args...]
@@ -82,7 +82,7 @@ sudo ./scripts/install-cmdgate.sh
 설치 후 다음 sudoers 규칙이 적용됩니다.
 
 ```sudoers
-cmdgateadm ALL=(ALL) NOPASSWD: /opt/cmdgate/cmdgate-exec *
+cmdgateadm ALL=(root) NOPASSWD: /opt/cmdgate/cmdgate-exec *
 ```
 
 `cmdgateadm` 사용자가 존재하지 않으면 설치 스크립트는 경고를 출력합니다. 관리자가 해당 사용자를 직접 생성한 뒤에야 sudoers 규칙이 실제로 동작합니다.
@@ -208,7 +208,7 @@ cmd: "dnf install <rpmFiles:k8s-rpms>"
 - sudoers 규칙은 `cmdgateadm` 사용자가 `/opt/cmdgate/cmdgate-exec`만 실행할 수 있도록 제한해야 합니다.
 
 ```sudoers
-cmdgateadm ALL=(ALL) NOPASSWD: /opt/cmdgate/cmdgate-exec *
+cmdgateadm ALL=(root) NOPASSWD: /opt/cmdgate/cmdgate-exec *
 ```
 
 - 정책 번들은 manifest와 SHA-256 체크섬 검증을 통과한 뒤에 적용됩니다.
