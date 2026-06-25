@@ -1,0 +1,139 @@
+version: 1.0.0
+mode: allowlist-only
+
+commands:
+  - id: systemctl-restart-kubelet
+    desc: kubelet 재시작
+    cmd: "systemctl restart kubelet"
+
+  - id: systemctl-restart-containerd
+    desc: containerd 재시작
+    cmd: "systemctl restart containerd"
+
+  - id: systemctl-stop-kubelet
+    desc: kubelet 중지
+    cmd: "systemctl stop kubelet"
+
+  - id: systemctl-stop-containerd
+    desc: containerd 중지
+    cmd: "systemctl stop containerd"
+
+  - id: systemctl-start-kubelet
+    desc: kubelet 시작
+    cmd: "systemctl start kubelet"
+
+  - id: systemctl-start-containerd
+    desc: containerd 시작
+    cmd: "systemctl start containerd"
+
+  - id: systemctl-status-kubelet
+    desc: kubelet 상태 확인
+    cmd: "systemctl status kubelet"
+
+  - id: systemctl-status-containerd
+    desc: containerd 상태 확인
+    cmd: "systemctl status containerd"
+
+  - id: systemctl-enable-kubelet
+    desc: kubelet enable
+    cmd: "systemctl enable kubelet"
+
+  - id: systemctl-enable-containerd
+    desc: containerd enable
+    cmd: "systemctl enable containerd"
+
+  - id: systemctl-daemon-reload
+    desc: systemd daemon reload
+    cmd: "systemctl daemon-reload"
+
+  - id: dnf-install-kubelet
+    desc: kubelet 설치
+    cmd: "dnf install kubelet"
+
+  - id: dnf-install-kubeadm
+    desc: kubeadm 설치
+    cmd: "dnf install kubeadm"
+
+  - id: dnf-install-local-rpms
+    desc: 로컬 RPM 설치
+    cmd: "dnf install <rpmFiles:k8s-rpms>"
+
+  - id: dnf-info-containerd
+    desc: containerd 패키지 정보 확인
+    cmd: "dnf info containerd"
+
+  - id: kubeadm-version
+    desc: kubeadm 버전 확인
+    cmd: "kubeadm version"
+
+  - id: kubeadm-config-images-list
+    desc: kubeadm 이미지 목록 확인
+    cmd: "kubeadm config images list"
+
+  - id: kubeadm-config-images-pull
+    desc: kubeadm 이미지 pull
+    cmd: "kubeadm config images pull"
+
+  - id: kubeadm-upgrade-plan
+    desc: kubeadm upgrade plan
+    cmd: "kubeadm upgrade plan"
+
+  - id: kubeadm-upgrade-node
+    desc: kubeadm upgrade node
+    cmd: "kubeadm upgrade node"
+
+  - id: kubeadm-certs-check-expiration
+    desc: kubeadm 인증서 만료 확인
+    cmd: "kubeadm certs check-expiration"
+
+  - id: crictl-info
+    desc: CRI 정보 확인
+    cmd: "crictl info"
+
+  - id: crictl-ps
+    desc: 컨테이너 목록 확인
+    cmd: "crictl ps"
+
+  - id: crictl-images
+    desc: CRI 이미지 목록 확인
+    cmd: "crictl images"
+
+  - id: ctr-images-ls
+    desc: containerd 이미지 목록 확인
+    cmd: "ctr -n k8s.io images ls"
+
+  - id: ctr-containers-ls
+    desc: containerd 컨테이너 목록 확인
+    cmd: "ctr -n k8s.io containers ls"
+
+  - id: journalctl-kubelet
+    desc: kubelet 로그 확인
+    cmd: "journalctl -u kubelet --no-pager"
+
+  - id: journalctl-containerd
+    desc: containerd 로그 확인
+    cmd: "journalctl -u containerd --no-pager"
+
+  - id: journalctl-kubelet-lines
+    desc: kubelet 로그 라인 수 지정 확인
+    cmd: "journalctl -u kubelet -n <number:lines> --no-pager"
+
+  - id: journalctl-containerd-lines
+    desc: containerd 로그 라인 수 지정 확인
+    cmd: "journalctl -u containerd -n <number:lines> --no-pager"
+
+matchers:
+  k8s-rpms:
+    type: rpmFiles
+    multiple: true
+    metadataNameIn:
+      - kubelet
+      - containerd
+      - containerd.io
+      - kubeadm
+      - cri-tools
+      - kubectl
+      - kubernetes-cni
+
+  lines:
+    type: number
