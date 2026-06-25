@@ -46,34 +46,6 @@ commands:
     desc: Reload systemd daemon configuration
     cmd: "systemctl daemon-reload"
 
-  - id: systemctl-status-firewalld
-    desc: Show firewalld service status
-    cmd: "systemctl status firewalld"
-
-  - id: systemctl-disable-firewalld
-    desc: Disable firewalld service
-    cmd: "systemctl disable firewalld --now"
-
-  - id: systemctl-list-units
-    desc: List systemd units
-    cmd: "systemctl list-units"
-
-  - id: systemctl-list-unit-files
-    desc: List systemd unit files
-    cmd: "systemctl list-unit-files"
-
-  - id: systemctl-status-unit
-    desc: Show status of a specific systemd unit
-    cmd: "systemctl status <string:unit>"
-
-  - id: systemctl-restart-unit
-    desc: Restart a specific systemd unit
-    cmd: "systemctl restart <string:unit>"
-
-  - id: systemctl-mask-unit
-    desc: Mask a specific systemd unit
-    cmd: "systemctl mask <string:unit>"
-
   - id: setup-oks-node
     desc: Run OKS node initial setup script (root managed)
     cmd: "/opt/cmdgate/scripts/setup-oks-node.sh"
@@ -93,6 +65,10 @@ commands:
   - id: dnf-info-containerd
     desc: Show containerd package information
     cmd: "dnf info containerd"
+
+  - id: dnf-repolist
+    desc: List DNF repositories
+    cmd: "dnf repolist"
 
   - id: kubeadm-version
     desc: Show kubeadm version
@@ -130,42 +106,6 @@ commands:
     desc: Show etcd endpoint status
     cmd: "etcdctl endpoint status"
 
-  - id: cilium-status
-    desc: Show Cilium status
-    cmd: "cilium status"
-
-  - id: cilium-health
-    desc: Show Cilium health
-    cmd: "cilium health"
-
-  - id: hubble-status
-    desc: Show Hubble status
-    cmd: "hubble status"
-
-  - id: dig-short
-    desc: DNS lookup
-    cmd: "dig +short <string:hostname>"
-
-  - id: ip-addr
-    desc: Show network interfaces
-    cmd: "ip addr"
-
-  - id: ip-route
-    desc: Show routing table
-    cmd: "ip route"
-
-  - id: ss-listening
-    desc: Show listening sockets
-    cmd: "ss -tlnp"
-
-  - id: ps-aux
-    desc: List processes
-    cmd: "ps aux"
-
-  - id: df-h
-    desc: Show disk usage
-    cmd: "df -h"
-
   - id: sysctl-system
     desc: Apply sysctl settings
     cmd: "sysctl --system"
@@ -185,10 +125,6 @@ commands:
   - id: setenforce-permissive
     desc: Set SELinux to permissive
     cmd: "setenforce 0"
-
-  - id: dnf-repolist
-    desc: List DNF repositories
-    cmd: "dnf repolist"
 
   - id: crictl-info
     desc: Show CRI information
@@ -238,18 +174,6 @@ commands:
     desc: Show containerd logs
     cmd: "journalctl -u containerd --no-pager"
 
-  - id: journalctl-unit
-    desc: Show logs for a specific systemd unit
-    cmd: "journalctl -u <string:unit> --no-pager"
-
-  - id: journalctl-unit-lines
-    desc: Show logs for a specific systemd unit with line count
-    cmd: "journalctl -u <string:unit> -n <number:lines> --no-pager"
-
-  - id: journalctl-all
-    desc: Show all system logs
-    cmd: "journalctl --no-pager"
-
   - id: journalctl-kubelet-lines
     desc: Show kubelet logs with line count
     cmd: "journalctl -u kubelet -n <number:lines> --no-pager"
@@ -274,11 +198,5 @@ matchers:
   lines:
     type: number
 
-  unit:
-    type: string
-
   container:
-    type: string
-
-  hostname:
     type: string
