@@ -171,12 +171,8 @@ func (e *executor) runList() error {
 		}
 	}
 
-	for i, row := range rows {
-		indent := ""
-		if i > 0 {
-			indent = "  "
-		}
-		printRow(widths, row, indent)
+	for _, row := range rows {
+		printRow(widths, row, "  ")
 	}
 	return nil
 }
