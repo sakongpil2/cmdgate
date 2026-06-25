@@ -3,3 +3,12 @@ worktrees/
 cmdgate
 cmdgate-exec
 *.log
+
+# Agent / environment metadata
+.omo/
+.codegraph
+AGENTS.md
+
+# Requirements / planning docs (keep repo source-only)
+cmdgate-requirements-compact.md
+docs/superpowers/plans/*.md
