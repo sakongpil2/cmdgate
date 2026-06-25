@@ -63,12 +63,19 @@ go build ./cmd/...
 
 `scripts/install-cmdgate.sh`를 사용해 설치합니다. 설치 스크립트는 root 권한으로 실행해야 합니다.
 
+기본 운영자 계정은 `cmdgateadm`입니다. 다른 운영자 계정을 사용하려면 설치 스크립트 실행 전에
+`CMDGATE_USER` 환경 변수를 설정합니다. 설치 스크립트는 사용자를 생성하지 않으므로, 설치 전에
+먼저 생성해야 합니다.
+
 ```bash
 # 빌드한 바이너리와 기본 정책 파일을 scripts 디렉터리에 복사
 cp cmdgate cmdgate-exec configs/allowlist.yaml scripts/
 
-# root 권한으로 설치 스크립트 실행
+# 기본 운영자(cmdgateadm)로 설치
 sudo ./scripts/install-cmdgate.sh
+
+# 또는 다른 운영자 계정 사용
+# sudo CMDGATE_USER=myops ./scripts/install-cmdgate.sh
 ```
 
 설치 스크립트는 다음 작업을 수행합니다.
@@ -76,16 +83,24 @@ sudo ./scripts/install-cmdgate.sh
 1. `/opt/cmdgate`, `/opt/cmdgate/work`, `/var/log/cmdgate` 디렉터리를 생성합니다.
 2. `cmdgate`, `cmdgate-exec`, `allowlist.yaml`을 `/opt/cmdgate`에 복사합니다.
 3. 파일 및 디렉터리 권한을 설정합니다.
-4. `/etc/sudoers.d/cmdgate` 파일을 생성합니다.
+4. 운영자 계정용 `/etc/sudoers.d/cmdgate` 파일을 생성합니다.
 5. `visudo -c`로 sudoers 설정을 검증합니다.
+6. `/etc/profile.d/cmdgate.sh`를 통해 `/opt/cmdgate`를 시스템 `PATH`에 추가하여
+   사용자가 전체 경로를 입력하지 않고 `cmdgate`를 실행할 수 있게 합니다.
 
-설치 후 다음 sudoers 규칙이 적용됩니다.
+설치 후 다음 sudoers 규칙이 적용됩니다. `CMDGATE_USER`를 변경했다면 `cmdgateadm`을
+해당 계정명으로 바꿔서 확인하세요.
 
 ```sudoers
 cmdgateadm ALL=(root) NOPASSWD: /opt/cmdgate/cmdgate-exec *
 ```
 
-`cmdgateadm` 사용자가 존재하지 않으면 설치 스크립트는 경고를 출력합니다. 관리자가 해당 사용자를 직접 생성한 뒤에야 sudoers 규칙이 실제로 동작합니다.
+운영자 사용자가 존재하지 않으면 설치 스크립트는 경고를 출력합니다. `cmdgate`를
+실행하기 전에 다음과 같이 사용자를 생성하세요.
+
+```bash
+useradd -r -s /sbin/nologin cmdgateadm
+```
 
 ## 사용 예시
 
@@ -205,10 +220,14 @@ cmd: "dnf install <rpmFiles:k8s-rpms>"
 - 권한 상승은 `sudo`를 통해서만 이루어지며, `cmdgate-exec`만 비밀번호 없는 sudo 접근을 허용받습니다.
 - `cmdgate`는 입력을 검증하지 않으므로, 검증은 반드시 `cmdgate-exec`에서 수행되어야 합니다.
 - `/opt/cmdgate/allowlist.yaml` 접근을 제한하여 일반 사용자가 정책을 임의로 변경하지 못하도록 합니다.
-- sudoers 규칙은 `cmdgateadm` 사용자가 `/opt/cmdgate/cmdgate-exec`만 실행할 수 있도록 제한해야 합니다.
+- sudoers 규칙은 운영자 사용자(기본값 `cmdgateadm`)가 `/opt/cmdgate/cmdgate-exec`만
+  실행할 수 있도록 제한해야 합니다.
 
 ```sudoers
 cmdgateadm ALL=(root) NOPASSWD: /opt/cmdgate/cmdgate-exec *
 ```
+
+운영자 계정을 변경하려면 설치 시 `CMDGATE_USER`를 설정하고, `cmdgate` 실행 전에
+해당 사용자가 존재하는지 확인하세요.
 
 - 정책 번들은 manifest와 SHA-256 체크섬 검증을 통과한 뒤에 적용됩니다.

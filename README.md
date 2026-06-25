@@ -63,12 +63,19 @@ This produces the `cmdgate` and `cmdgate-exec` binaries.
 
 Use `scripts/install-cmdgate.sh`. The script must be run as root.
 
+The default operator account is `cmdgateadm`. To use a different operator
+account, set the `CMDGATE_USER` environment variable before running the
+installer. The installer does not create the user; you must create it first.
+
 ```bash
 # Copy built binaries and the default policy into the script directory
 cp cmdgate cmdgate-exec configs/allowlist.yaml scripts/
 
-# Run the installer as root
+# Run the installer as root with the default operator (cmdgateadm)
 sudo ./scripts/install-cmdgate.sh
+
+# Or use a custom operator account
+# sudo CMDGATE_USER=myops ./scripts/install-cmdgate.sh
 ```
 
 The installer performs the following:
@@ -76,16 +83,24 @@ The installer performs the following:
 1. Creates `/opt/cmdgate`, `/opt/cmdgate/work`, and `/var/log/cmdgate`.
 2. Copies `cmdgate`, `cmdgate-exec`, and `allowlist.yaml` into `/opt/cmdgate`.
 3. Sets file and directory permissions.
-4. Creates `/etc/sudoers.d/cmdgate`.
+4. Creates `/etc/sudoers.d/cmdgate` for the operator account.
 5. Validates the sudoers file with `visudo -c`.
+6. Adds `/opt/cmdgate` to the system `PATH` via `/etc/profile.d/cmdgate.sh`
+   so users can run `cmdgate` without typing the full path.
 
-After installation the following sudoers rule is active:
+After installation the following sudoers rule is active (replace `cmdgateadm`
+with your `CMDGATE_USER` value if you changed it):
 
 ```sudoers
 cmdgateadm ALL=(root) NOPASSWD: /opt/cmdgate/cmdgate-exec *
 ```
 
-If the `cmdgateadm` user does not exist, the installer prints a warning. The sudoers rule only becomes effective after an administrator creates that user.
+If the operator user does not exist, the installer prints a warning. Create
+the user before invoking `cmdgate`:
+
+```bash
+useradd -r -s /sbin/nologin cmdgateadm
+```
 
 ## Usage examples
 
@@ -205,10 +220,14 @@ Log fields:
 - Privilege escalation happens only through `sudo`; `cmdgate-exec` is the only binary granted passwordless sudo access.
 - `cmdgate` does not validate input, so `cmdgate-exec` must remain the single point of authorization.
 - Restrict access to `/opt/cmdgate/allowlist.yaml` so that regular users cannot modify the policy.
-- The sudoers rule should allow only the `cmdgateadm` user to run `/opt/cmdgate/cmdgate-exec`:
+- The sudoers rule should allow only the operator user (`cmdgateadm` by default)
+  to run `/opt/cmdgate/cmdgate-exec`:
 
 ```sudoers
 cmdgateadm ALL=(root) NOPASSWD: /opt/cmdgate/cmdgate-exec *
 ```
+
+To change the operator account, set `CMDGATE_USER` when running the installer
+and ensure the user exists before invoking `cmdgate`.
 
 - Policy bundles are validated against a manifest and SHA-256 checksum before being applied.

@@ -7,6 +7,10 @@ LOG_DIR="/var/log/cmdgate"
 WORK_DIR="${INSTALL_DIR}/work"
 SUDOERS_FILE="/etc/sudoers.d/cmdgate"
 
+# The operator account allowed to run cmdgate-exec via sudo.
+# Override with: CMDGATE_USER=myops ./install-cmdgate.sh
+CMDGATE_USER="${CMDGATE_USER:-cmdgateadm}"
+
 if [[ $EUID -ne 0 ]]; then
     echo "This script must be run as root" >&2
     exit 1
@@ -19,12 +23,15 @@ for f in cmdgate cmdgate-exec allowlist.yaml; do
     fi
 done
 
-if ! id -u cmdgateadm >/dev/null 2>&1; then
-    cat >&2 <<'EOF'
-Warning: user 'cmdgateadm' does not exist.
+if ! id -u "${CMDGATE_USER}" >/dev/null 2>&1; then
+    cat >&2 <<EOF
+Warning: user '${CMDGATE_USER}' does not exist.
 The sudoers rule will be installed, but it will only take effect after
-the system administrator creates the 'cmdgateadm' user and adds them to
+the system administrator creates the '${CMDGATE_USER}' user and adds them to
 the appropriate groups.
+
+Example:
+    useradd -r -s /sbin/nologin ${CMDGATE_USER}
 EOF
 fi
 
@@ -38,11 +45,16 @@ chmod 0755 "${INSTALL_DIR}"
 chmod 0700 "${WORK_DIR}"
 chmod 0750 "${LOG_DIR}"
 
-cat > "${SUDOERS_FILE}" <<'EOF'
-cmdgateadm ALL=(root) NOPASSWD: /opt/cmdgate/cmdgate-exec *
+# shellcheck disable=SC2016
+cat > "${SUDOERS_FILE}" <<EOF
+${CMDGATE_USER} ALL=(root) NOPASSWD: /opt/cmdgate/cmdgate-exec *
 EOF
 
 chmod 0440 "${SUDOERS_FILE}"
-visudo -c
+visudo -c -f "${SUDOERS_FILE}"
 
-echo "CmdGate installed to ${INSTALL_DIR}"
+PROFILE_D_FILE="/etc/profile.d/cmdgate.sh"
+printf 'export PATH="/opt/cmdgate:${PATH}"\n' > "${PROFILE_D_FILE}"
+chmod 0644 "${PROFILE_D_FILE}"
+
+echo "CmdGate installed to ${INSTALL_DIR} for operator user '${CMDGATE_USER}'"
