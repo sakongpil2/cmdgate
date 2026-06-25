@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/example/cmdgate/internal/allowlist"
+	"github.com/sakongpil2/cmdgate/internal/allowlist"
 	"gopkg.in/yaml.v3"
 )
 

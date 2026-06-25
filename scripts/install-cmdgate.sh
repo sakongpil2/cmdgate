@@ -61,4 +61,6 @@ PROFILE_D_FILE="/etc/profile.d/cmdgate.sh"
 printf 'export PATH="/opt/cmdgate:${PATH}"\n' > "${PROFILE_D_FILE}"
 chmod 0644 "${PROFILE_D_FILE}"
 
+ln -sf "${INSTALL_DIR}/cmdgate" /usr/local/bin/cmdgate
+
 echo "CmdGate installed to ${INSTALL_DIR} for operator user '${CMDGATE_USER}'"

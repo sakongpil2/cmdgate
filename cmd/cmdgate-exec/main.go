@@ -13,11 +13,11 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/example/cmdgate/internal/allowlist"
-	"github.com/example/cmdgate/internal/audit"
-	"github.com/example/cmdgate/internal/matchers"
-	"github.com/example/cmdgate/internal/policy"
-	"github.com/example/cmdgate/internal/runner"
+	"github.com/sakongpil2/cmdgate/internal/allowlist"
+	"github.com/sakongpil2/cmdgate/internal/audit"
+	"github.com/sakongpil2/cmdgate/internal/matchers"
+	"github.com/sakongpil2/cmdgate/internal/policy"
+	"github.com/sakongpil2/cmdgate/internal/runner"
 )
 
 const (
@@ -322,9 +322,11 @@ func (e *executor) readAuditTail(limit int) ([]string, error) {
 
 func (e *executor) handlePolicy(args []string) error {
 	if len(args) < 2 {
-		return fmt.Errorf("usage: cmdgate-exec policy <validate|apply> --bundle <path>")
+		return fmt.Errorf("usage: cmdgate-exec policy validate --bundle <path>")
 	}
-	action := args[0]
+	if args[0] != "validate" {
+		return fmt.Errorf("unknown policy action: %s", args[0])
+	}
 	bundle := ""
 	for i := 1; i < len(args); i++ {
 		if args[i] == "--bundle" && i+1 < len(args) {
@@ -335,26 +337,13 @@ func (e *executor) handlePolicy(args []string) error {
 	if bundle == "" {
 		return fmt.Errorf("--bundle required")
 	}
-	switch action {
-	case "validate":
-		if err := policy.ValidateBundle(bundle); err != nil {
-			return err
-		}
-		if err := e.writeAudit(audit.LogEntry{Action: "policy_validate", CommandID: bundle, Command: bundle, Result: "success"}); err != nil {
-			fmt.Fprintf(os.Stderr, "audit log warning: %v\n", err)
-		}
-		return nil
-	case "apply":
-		if err := policy.ApplyBundle(bundle, e.allowlistPath); err != nil {
-			return err
-		}
-		if err := e.writeAudit(audit.LogEntry{Action: "policy_apply", CommandID: bundle, Command: bundle, Result: "success"}); err != nil {
-			fmt.Fprintf(os.Stderr, "audit log warning: %v\n", err)
-		}
-		return nil
-	default:
-		return fmt.Errorf("unknown policy action: %s", action)
+	if err := policy.ValidateBundle(bundle); err != nil {
+		return err
 	}
+	if err := e.writeAudit(audit.LogEntry{Action: "policy_validate", CommandID: bundle, Command: bundle, Result: "success"}); err != nil {
+		fmt.Fprintf(os.Stderr, "audit log warning: %v\n", err)
+	}
+	return nil
 }
 
 func (e *executor) loadConfig() (*allowlist.Config, error) {

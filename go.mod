@@ -1,4 +1,4 @@
-module github.com/example/cmdgate
+module github.com/sakongpil2/cmdgate
 
 go 1.22
 

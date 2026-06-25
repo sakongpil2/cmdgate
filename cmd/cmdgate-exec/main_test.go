@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/example/cmdgate/internal/allowlist"
+	"github.com/sakongpil2/cmdgate/internal/allowlist"
 )
 
 func TestExecutorRunList(t *testing.T) {
@@ -123,11 +123,6 @@ func TestExecutorHandlePolicy(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "apply success",
-			args:    []string{"apply", "--bundle", bundlePath},
-			wantErr: false,
-		},
-		{
 			name:    "missing bundle value",
 			args:    []string{"validate", "--bundle"},
 			wantErr: true,
@@ -135,7 +130,7 @@ func TestExecutorHandlePolicy(t *testing.T) {
 		},
 		{
 			name:    "unknown action",
-			args:    []string{"delete", "--bundle", bundlePath},
+			args:    []string{"apply", "--bundle", bundlePath},
 			wantErr: true,
 			errMsg:  "unknown policy action",
 		},
