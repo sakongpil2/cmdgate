@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"os/user"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/example/cmdgate/internal/allowlist"
 	"github.com/example/cmdgate/internal/audit"
@@ -130,10 +131,68 @@ func (e *executor) runList() error {
 	if err != nil {
 		return err
 	}
+
+	colors := newColors(os.Stdout)
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintf(w, "%s\t%s\t%s\n",
+		colors.header("ID"),
+		colors.header("DESCRIPTION"),
+		colors.header("COMMAND"),
+	)
 	for _, c := range cfg.Commands {
-		fmt.Printf("%s\t%s\t%s\n", c.ID, c.Desc, c.Cmd)
+		fmt.Fprintf(w, "%s\t%s\t%s\n",
+			colors.id(c.ID),
+			colors.desc(c.Desc),
+			colors.cmd(c.Cmd),
+		)
 	}
-	return nil
+	return w.Flush()
+}
+
+// colors wraps ANSI escape sequences. When stdout is not a terminal or the
+// NO_COLOR environment variable is set, all methods return the input unchanged.
+type colors struct {
+	enabled bool
+}
+
+func newColors(out *os.File) colors {
+	return colors{enabled: isTerminal(out) && os.Getenv("NO_COLOR") == ""}
+}
+
+func (c colors) header(s string) string {
+	if !c.enabled {
+		return s
+	}
+	return "\x1b[1;36m" + s + "\x1b[0m"
+}
+
+func (c colors) id(s string) string {
+	if !c.enabled {
+		return s
+	}
+	return "\x1b[33m" + s + "\x1b[0m"
+}
+
+func (c colors) desc(s string) string {
+	if !c.enabled {
+		return s
+	}
+	return "\x1b[37m" + s + "\x1b[0m"
+}
+
+func (c colors) cmd(s string) string {
+	if !c.enabled {
+		return s
+	}
+	return "\x1b[32m" + s + "\x1b[0m"
+}
+
+func isTerminal(f *os.File) bool {
+	fi, err := f.Stat()
+	if err != nil {
+		return false
+	}
+	return fi.Mode()&os.ModeCharDevice != 0
 }
 
 func (e *executor) handlePolicy(args []string) error {
