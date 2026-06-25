@@ -171,8 +171,12 @@ func (e *executor) runList() error {
 		}
 	}
 
-	for _, row := range rows {
-		printRow(widths, row)
+	for i, row := range rows {
+		indent := ""
+		if i > 0 {
+			indent = "  "
+		}
+		printRow(widths, row, indent)
 	}
 	return nil
 }
@@ -183,7 +187,8 @@ func visibleWidth(s string) int {
 	return utf8.RuneCountInString(ansiEscape.ReplaceAllString(s, ""))
 }
 
-func printRow(widths []int, cells []string) {
+func printRow(widths []int, cells []string, indent string) {
+	fmt.Print(indent)
 	for i, cell := range cells {
 		if i > 0 {
 			fmt.Print("  ")
