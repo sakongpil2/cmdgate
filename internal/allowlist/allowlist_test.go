@@ -275,3 +275,60 @@ func TestPlaceholderParts(t *testing.T) {
 		t.Errorf("PlaceholderParts(plain) = ok, want not ok")
 	}
 }
+
+func TestFindWithInlinePlaceholder(t *testing.T) {
+	input := `
+commands:
+  - id: ls-cmdgate-dir
+    cmd: "ls -la /opt/cmdgate/<string:dir>/"
+`
+	cfg, err := Parse([]byte(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	cmd, placeholders, ok := cfg.FindCommandWithPlaceholders([]string{"ls", "-la", "/opt/cmdgate/scripts/"})
+	if !ok {
+		t.Fatalf("expected match")
+	}
+	if cmd.ID != "ls-cmdgate-dir" {
+		t.Errorf("id = %q, want ls-cmdgate-dir", cmd.ID)
+	}
+	if len(placeholders) != 1 {
+		t.Fatalf("placeholders = %d, want 1", len(placeholders))
+	}
+	if placeholders[0].Type != "string" || placeholders[0].Name != "dir" || placeholders[0].Value != "scripts" {
+		t.Errorf("placeholder = %+v, want {Type:string Name:dir Value:scripts}", placeholders[0])
+	}
+}
+
+func TestFindWithInlinePlaceholderNoMatch(t *testing.T) {
+	input := `
+commands:
+  - id: ls-cmdgate-dir
+    cmd: "ls -la /opt/cmdgate/<string:dir>/"
+`
+	cfg, err := Parse([]byte(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	_, _, ok := cfg.FindCommandWithPlaceholders([]string{"ls", "-la", "/var/log/cmdgate/"})
+	if ok {
+		t.Errorf("expected no match for different prefix")
+	}
+}
+
+func TestFindWithInlinePlaceholderMultipleRejected(t *testing.T) {
+	input := `
+commands:
+  - id: bad
+    cmd: "ls /opt/<string:a>/<string:b>/"
+`
+	cfg, err := Parse([]byte(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	_, _, ok := cfg.FindCommandWithPlaceholders([]string{"ls", "/opt/x/y/"})
+	if ok {
+		t.Errorf("expected no match for token with multiple placeholders")
+	}
+}

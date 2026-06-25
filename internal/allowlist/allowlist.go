@@ -76,6 +76,15 @@ func (c *Config) FindCommandWithPlaceholders(argv []string) (Command, []Placehol
 				placeholders = append(placeholders, Placeholder{Type: typ, Name: name, Value: argv[i]})
 				continue
 			}
+			if prefix, typ, name, suffix, ok := extractPlaceholder(p); ok {
+				value, matched := matchInlinePlaceholder(argv[i], prefix, suffix)
+				if !matched {
+					match = false
+					break
+				}
+				placeholders = append(placeholders, Placeholder{Type: typ, Name: name, Value: value})
+				continue
+			}
 			if p != argv[i] {
 				match = false
 				break
@@ -107,6 +116,50 @@ func PlaceholderParts(s string) (typ, name string, ok bool) {
 		return inner[:idx], inner[idx+1:], true
 	}
 	return "", inner, true
+}
+
+// extractPlaceholder finds a single <type:name> or <name> placeholder inside a
+// larger token and returns the literal prefix/suffix surrounding it. If the
+// token contains zero or more than one placeholder, ok is false.
+func extractPlaceholder(token string) (prefix, typ, name, suffix string, ok bool) {
+	start := strings.Index(token, "<")
+	if start == -1 {
+		return "", "", "", "", false
+	}
+	if strings.Contains(token[start+1:], "<") {
+		return "", "", "", "", false
+	}
+	end := strings.Index(token[start:], ">")
+	if end == -1 {
+		return "", "", "", "", false
+	}
+	end += start
+	inner := token[start+1 : end]
+	if idx := strings.Index(inner, ":"); idx >= 0 {
+		typ, name = inner[:idx], inner[idx+1:]
+	} else {
+		name = inner
+	}
+	return token[:start], typ, name, token[end+1:], true
+}
+
+// matchInlinePlaceholder checks that value starts with prefix and ends with
+// suffix, returning the middle part. Empty prefix or suffix are allowed.
+func matchInlinePlaceholder(value, prefix, suffix string) (string, bool) {
+	if prefix != "" && !strings.HasPrefix(value, prefix) {
+		return "", false
+	}
+	if suffix != "" && !strings.HasSuffix(value, suffix) {
+		return "", false
+	}
+	middle := value
+	if prefix != "" {
+		middle = middle[len(prefix):]
+	}
+	if suffix != "" {
+		middle = middle[:len(middle)-len(suffix)]
+	}
+	return middle, true
 }
 
 // ValidateSchema checks that the allowlist has required fields, uses supported
