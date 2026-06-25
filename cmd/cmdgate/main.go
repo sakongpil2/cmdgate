@@ -38,7 +38,7 @@ Usage:
 
 Commands:
   run     Run a pre-approved command
-  policy  Validate or apply a policy bundle
+  policy  Validate a policy bundle
   audit   View audit logs
   help    Show this help message
 

@@ -26,36 +26,6 @@ func ValidateBundle(bundlePath string) error {
 	return err
 }
 
-// ApplyBundle validates a bundle and replaces the target allowlist with its contents.
-func ApplyBundle(bundlePath, targetPath string) error {
-	allowlist, _, err := extractAndVerify(bundlePath)
-	if err != nil {
-		return err
-	}
-
-	backup := targetPath + ".backup"
-	hasBackup := false
-
-	if _, err := os.Stat(targetPath); err != nil {
-		if !os.IsNotExist(err) {
-			return fmt.Errorf("stat target failed: %w", err)
-		}
-	} else {
-		if err := os.Rename(targetPath, backup); err != nil {
-			return fmt.Errorf("backup failed: %w", err)
-		}
-		hasBackup = true
-	}
-
-	if err := os.WriteFile(targetPath, allowlist, 0o640); err != nil {
-		if hasBackup {
-			_ = os.Rename(backup, targetPath)
-		}
-		return fmt.Errorf("write target failed: %w", err)
-	}
-	return nil
-}
-
 func extractAndVerify(bundlePath string) (allowlistBytes []byte, manifest Manifest, err error) {
 	f, err := os.Open(bundlePath)
 	if err != nil {

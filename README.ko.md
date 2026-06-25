@@ -9,7 +9,7 @@ CmdGate는 운영자가 사전에 허용된 명령만 위임 권한으로 실행
 
 `cmdgate`는 사용자 입력을 받아 `sudo -n`을 통해 `cmdgate-exec`를 호출합니다. `cmdgate-exec`는 allowlist를 기준으로 요청을 검증하고, matcher를 실행하며, argv 배열 형태로 명령을 실행한 뒤 감사 기록을 남깁니다.
 
-> English documentation is available at [README.md](README.md).
+> 영어 문서는 [README.md](README.md)를 참고하세요.
 
 ## 바이너리 책임
 
@@ -22,12 +22,11 @@ CmdGate는 운영자가 사전에 허용된 명령만 위임 권한으로 실행
 - `cmdgate run <command> [args...]`
 - `cmdgate run list`
 - `cmdgate policy validate --bundle <tar.gz>`
-- `cmdgate policy apply --bundle <tar.gz>`
 - `cmdgate audit tail [n]`
 - `cmdgate help`
 - `cmdgate --help`
 
-남부적으로는 다음 형태로 `cmdgate-exec`를 호출합니다.
+내부적으로는 다음 형태로 `cmdgate-exec`를 호출합니다.
 
 ```bash
 sudo -n /opt/cmdgate/cmdgate-exec <subcommand> [args...]
@@ -42,7 +41,6 @@ sudo -n /opt/cmdgate/cmdgate-exec <subcommand> [args...]
 - `cmdgate-exec run <command> [args...]`
 - `cmdgate-exec run list`
 - `cmdgate-exec policy validate --bundle <tar.gz>`
-- `cmdgate-exec policy apply --bundle <tar.gz>`
 - `cmdgate-exec audit tail [n]`
 - `cmdgate-exec help`
 - `cmdgate-exec --help`
@@ -136,7 +134,7 @@ cmdgate audit tail      # 최근 20개 항목
 cmdgate audit tail 50   # 최근 50개 항목
 ```
 
-출력은 `/var/log/cmdgate/audit.log`의 JSON Lines 형식 그대로입니다.
+출력은 `/var/log/cmdgate/audit.log`의 최근 키-값 감사 로그 라인입니다.
 
 ### 도움말 보기
 
@@ -243,7 +241,7 @@ cmd: "dnf install <rpmFiles:k8s-rpms>"
 
 - `timestamp`: 이벤트 발생 시각
 - `user`: 명령을 실행한 사용자
-- `action`: 수행한 동작 (`run`, `policy_validate`, `policy_apply`, `audit_tail` 등)
+- `action`: 수행한 동작 (`run`, `policy_validate`)
 - `command_id`: allowlist에서 매칭된 명령 ID
 - `command`: 사용자가 입력한 명령
 - `result`: 실행 결과 (`success` 또는 `denied`)
@@ -265,4 +263,4 @@ cmdgateadm ALL=(root) NOPASSWD: /opt/cmdgate/cmdgate-exec *
 운영자 계정을 변경하려면 설치 시 `CMDGATE_USER`를 설정하고, `cmdgate` 실행 전에
 해당 사용자가 존재하는지 확인하세요.
 
-- 정책 번들은 manifest와 SHA-256 체크섬 검증을 통과한 뒤에 적용됩니다.
+- 정책 번들은 manifest와 SHA-256 체크섬으로 검증됩니다.

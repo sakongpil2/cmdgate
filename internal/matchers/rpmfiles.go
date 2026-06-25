@@ -56,7 +56,8 @@ func (r *RpmFilesMatcher) Validate(paths []string) error {
 
 func hasAllowedPrefix(path string, dirs []string) bool {
 	for _, d := range dirs {
-		if strings.HasPrefix(path, filepath.Clean(d)) {
+		dir := filepath.Clean(d)
+		if path == dir || strings.HasPrefix(path, dir+string(filepath.Separator)) {
 			return true
 		}
 	}

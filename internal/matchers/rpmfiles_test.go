@@ -114,10 +114,15 @@ func TestRpmFilesMatcherRejectsMultipleWhenNotAllowed(t *testing.T) {
 func TestRpmFilesMatcherAllowedDirs(t *testing.T) {
 	dir := t.TempDir()
 	sub := filepath.Join(dir, "rpms")
+	nearby := filepath.Join(dir, "rpms-other")
 	if err := os.MkdirAll(sub, 0o755); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.MkdirAll(nearby, 0o755); err != nil {
+		t.Fatal(err)
+	}
 	createFakeRPM(t, filepath.Join(sub, "kubelet-1.rpm"), "kubelet")
+	createFakeRPM(t, filepath.Join(nearby, "kubelet-1.rpm"), "kubelet")
 
 	m := RpmFilesMatcher{
 		MetadataNameIn: []string{"kubelet"},
@@ -131,6 +136,11 @@ func TestRpmFilesMatcherAllowedDirs(t *testing.T) {
 	m.AllowedDirs = []string{"/other"}
 	if err := m.Validate([]string{filepath.Join(sub, "kubelet-1.rpm")}); err == nil {
 		t.Error("expected path outside allowed dirs to be rejected")
+	}
+
+	m.AllowedDirs = []string{sub}
+	if err := m.Validate([]string{filepath.Join(nearby, "kubelet-1.rpm")}); err == nil {
+		t.Error("expected path with only a shared string prefix to be rejected")
 	}
 }
 

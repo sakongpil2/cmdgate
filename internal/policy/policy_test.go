@@ -74,52 +74,6 @@ func TestValidateBundle_invalidAllowlistYAML(t *testing.T) {
 	}
 }
 
-func TestApplyBundle(t *testing.T) {
-	dir := t.TempDir()
-	bundle := filepath.Join(dir, "bundle.tar.gz")
-	createBundle(t, bundle, "1.1.0", false)
-
-	target := filepath.Join(dir, "allowlist.yaml")
-	if err := ApplyBundle(bundle, target); err != nil {
-		t.Fatalf("apply error: %v", err)
-	}
-
-	info, err := os.Stat(target)
-	if err != nil {
-		t.Fatalf("target not created: %v", err)
-	}
-	if got := info.Mode().Perm(); got != 0o640 {
-		t.Errorf("target permissions = %04o, want %04o", got, 0o640)
-	}
-
-	got, err := os.ReadFile(target)
-	if err != nil {
-		t.Fatalf("read target: %v", err)
-	}
-	want := "version: 1.1.0\nmode: allowlist-only\ncommands: []\n"
-	if string(got) != want {
-		t.Errorf("target content = %q, want %q", got, want)
-	}
-}
-
-func TestApplyBundleSurfacesStatError(t *testing.T) {
-	dir := t.TempDir()
-	bundle := filepath.Join(dir, "bundle.tar.gz")
-	createBundle(t, bundle, "1.1.0", false)
-
-	// Create a regular file and then use a path "inside" it so os.Stat returns
-	// a "not a directory" error rather than os.ErrNotExist.
-	fileTarget := filepath.Join(dir, "notadir")
-	if err := os.WriteFile(fileTarget, []byte("existing"), 0o640); err != nil {
-		t.Fatal(err)
-	}
-	target := filepath.Join(fileTarget, "allowlist.yaml")
-
-	if err := ApplyBundle(bundle, target); err == nil {
-		t.Error("expected error when target stat fails")
-	}
-}
-
 func createBundle(t *testing.T, path, version string, omitChecksum bool) {
 	t.Helper()
 	allowlistBody := "version: " + version + "\nmode: allowlist-only\ncommands: []\n"

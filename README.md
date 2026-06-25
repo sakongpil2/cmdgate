@@ -22,7 +22,6 @@ Supported commands:
 - `cmdgate run <command> [args...]`
 - `cmdgate run list`
 - `cmdgate policy validate --bundle <tar.gz>`
-- `cmdgate policy apply --bundle <tar.gz>`
 - `cmdgate audit tail [n]`
 - `cmdgate help`
 - `cmdgate --help`
@@ -42,7 +41,6 @@ Supported commands:
 - `cmdgate-exec run <command> [args...]`
 - `cmdgate-exec run list`
 - `cmdgate-exec policy validate --bundle <tar.gz>`
-- `cmdgate-exec policy apply --bundle <tar.gz>`
 - `cmdgate-exec audit tail [n]`
 - `cmdgate-exec help`
 - `cmdgate-exec --help`
@@ -136,7 +134,7 @@ cmdgate audit tail      # latest 20 entries
 cmdgate audit tail 50   # latest 50 entries
 ```
 
-The output is JSON Lines from `/var/log/cmdgate/audit.log`.
+The output is the latest key-value audit log lines from `/var/log/cmdgate/audit.log`.
 
 ### Get help
 
@@ -243,7 +241,7 @@ Log fields:
 
 - `timestamp`: Event time
 - `user`: The user who invoked the command
-- `action`: Action type (`run`, `policy_validate`, `policy_apply`, `audit_tail`)
+- `action`: Action type (`run`, `policy_validate`)
 - `command_id`: Matched allowlist command ID, if any
 - `command`: The command the user entered
 - `result`: `success` or `denied`
@@ -265,4 +263,4 @@ cmdgateadm ALL=(root) NOPASSWD: /opt/cmdgate/cmdgate-exec *
 To change the operator account, set `CMDGATE_USER` when running the installer
 and ensure the user exists before invoking `cmdgate`.
 
-- Policy bundles are validated against a manifest and SHA-256 checksum before being applied.
+- Policy bundles are validated against a manifest and SHA-256 checksum.

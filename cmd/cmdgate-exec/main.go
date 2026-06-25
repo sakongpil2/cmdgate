@@ -69,7 +69,7 @@ Usage:
 
 Commands:
   run     Run a pre-approved command
-  policy  Validate or apply a policy bundle
+  policy  Validate a policy bundle
   audit   View audit logs
   help    Show this help message
 
@@ -96,6 +96,7 @@ func (e *executor) handleRun(args []string) error {
 	if args[0] == "list" {
 		return e.runList()
 	}
+	commandText := strings.Join(args, " ")
 
 	cfg, err := e.loadConfig()
 	if err != nil {
@@ -121,24 +122,18 @@ func (e *executor) handleRun(args []string) error {
 	}
 
 	if !ok {
-		if err := e.writeAudit(audit.LogEntry{Action: "run", Command: strings.Join(args, " "), Result: "denied", Reason: "no matching command"}); err != nil {
-			fmt.Fprintf(os.Stderr, "audit log warning: %v\n", err)
-		}
+		e.writeAuditWarning(audit.LogEntry{Action: "run", Command: commandText, Result: "denied", Reason: "no matching command"})
 		return fmt.Errorf("command not allowed")
 	}
 
 	if rpmPaths != nil {
 		if err := validateRpmFiles(cfg, rpmName, rpmPaths); err != nil {
-			if auditErr := e.writeAudit(audit.LogEntry{Action: "run", CommandID: cmd.ID, Command: strings.Join(args, " "), Result: "denied", Reason: err.Error()}); auditErr != nil {
-				fmt.Fprintf(os.Stderr, "audit log warning: %v\n", auditErr)
-			}
+			e.writeAuditWarning(audit.LogEntry{Action: "run", CommandID: cmd.ID, Command: commandText, Result: "denied", Reason: err.Error()})
 			return fmt.Errorf("validation failed: %w", err)
 		}
 	} else {
 		if err := e.validatePlaceholders(cfg, placeholders); err != nil {
-			if auditErr := e.writeAudit(audit.LogEntry{Action: "run", CommandID: cmd.ID, Command: strings.Join(args, " "), Result: "denied", Reason: err.Error()}); auditErr != nil {
-				fmt.Fprintf(os.Stderr, "audit log warning: %v\n", auditErr)
-			}
+			e.writeAuditWarning(audit.LogEntry{Action: "run", CommandID: cmd.ID, Command: commandText, Result: "denied", Reason: err.Error()})
 			return fmt.Errorf("validation failed: %w", err)
 		}
 	}
@@ -150,9 +145,7 @@ func (e *executor) handleRun(args []string) error {
 		result = "failure"
 		reason = err.Error()
 	}
-	if auditErr := e.writeAudit(audit.LogEntry{Action: "run", CommandID: cmd.ID, Command: strings.Join(args, " "), Result: result, Reason: reason}); auditErr != nil {
-		fmt.Fprintf(os.Stderr, "audit log warning: %v\n", auditErr)
-	}
+	e.writeAuditWarning(audit.LogEntry{Action: "run", CommandID: cmd.ID, Command: commandText, Result: result, Reason: reason})
 	if err != nil {
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) {
@@ -340,9 +333,7 @@ func (e *executor) handlePolicy(args []string) error {
 	if err := policy.ValidateBundle(bundle); err != nil {
 		return err
 	}
-	if err := e.writeAudit(audit.LogEntry{Action: "policy_validate", CommandID: bundle, Command: bundle, Result: "success"}); err != nil {
-		fmt.Fprintf(os.Stderr, "audit log warning: %v\n", err)
-	}
+	e.writeAuditWarning(audit.LogEntry{Action: "policy_validate", CommandID: bundle, Command: bundle, Result: "success"})
 	return nil
 }
 
@@ -452,6 +443,12 @@ func (e *executor) writeAudit(entry audit.LogEntry) error {
 	}
 	defer w.Close()
 	return w.Write(entry)
+}
+
+func (e *executor) writeAuditWarning(entry audit.LogEntry) {
+	if err := e.writeAudit(entry); err != nil {
+		fmt.Fprintf(os.Stderr, "audit log warning: %v\n", err)
+	}
 }
 
 func effectiveUser() string {
