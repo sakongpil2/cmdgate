@@ -303,7 +303,7 @@ func (e *executor) validatePlaceholders(cfg *allowlist.Config, placeholders []al
 				return err
 			}
 		case "string":
-			m := matchers.StringMatcher{}
+			m := matchers.StringMatcher{Pattern: def.Pattern}
 			if err := m.Validate(p.Value); err != nil {
 				return err
 			}

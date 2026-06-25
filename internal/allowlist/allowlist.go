@@ -32,6 +32,7 @@ type MatcherDef struct {
 	Multiple       bool     `yaml:"multiple"`
 	AllowedDirs    []string `yaml:"allowedDirs"`
 	MetadataNameIn []string `yaml:"metadataNameIn"`
+	Pattern        string   `yaml:"pattern"`
 }
 
 // Parse parses YAML-formatted allowlist data into a Config.
