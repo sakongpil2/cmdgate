@@ -46,11 +46,15 @@ commands:
    desc: Reload systemd daemon configuration
    cmd: "systemctl daemon-reload"
 
- - id: run-cmdgate-script
-   desc: Run a script under /opt/cmdgate
-   cmd: "/opt/cmdgate/<string:script>"
+  - id: run-cmdgate-script
+    desc: Run a script under /opt/cmdgate
+    cmd: "/opt/cmdgate/<string:script>"
 
- - id: dnf-install-kubelet
+  - id: ls-cmdgate-dir
+    desc: List a directory under /opt/cmdgate
+    cmd: "ls -la /opt/cmdgate/<string:dir>/"
+
+  - id: dnf-install-kubelet
    desc: Install kubelet package
    cmd: "dnf install kubelet"
 
@@ -221,6 +225,10 @@ matchers:
    type: string
    pattern: '^[a-fA-F0-9]{64}$'
 
- version:
-   type: string
-   pattern: '^v[0-9]+\.[0-9]+\.[0-9]+$'
+  version:
+    type: string
+    pattern: '^v[0-9]+\.[0-9]+\.[0-9]+$'
+
+  dir:
+    type: string
+    pattern: '^(?:[a-zA-Z0-9_-]+/)*[a-zA-Z0-9_-]+$'
