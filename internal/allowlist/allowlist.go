@@ -64,6 +64,45 @@ func (c *Config) FindCommand(argv []string) (Command, bool) {
 	return Command{}, false
 }
 
+// Placeholder captures the name and matched value of a <type:name>
+// placeholder token found in an allowlist command.
+type Placeholder struct {
+	Name  string
+	Value string
+}
+
+// FindCommandWithPlaceholders returns the first command that matches argv and
+// also extracts every <type:name> placeholder's name and the argv value it
+// matched. It behaves like FindCommand but returns placeholder metadata.
+func (c *Config) FindCommandWithPlaceholders(argv []string) (Command, []Placeholder, bool) {
+	for _, cmd := range c.Commands {
+		parts := strings.Fields(cmd.Cmd)
+		if len(parts) != len(argv) {
+			continue
+		}
+		var placeholders []Placeholder
+		match := true
+		for i, p := range parts {
+			if isPlaceholder(p) {
+				name := strings.TrimSuffix(strings.TrimPrefix(p, "<"), ">")
+				if idx := strings.Index(name, ":"); idx >= 0 {
+					name = name[idx+1:]
+				}
+				placeholders = append(placeholders, Placeholder{Name: name, Value: argv[i]})
+				continue
+			}
+			if p != argv[i] {
+				match = false
+				break
+			}
+		}
+		if match {
+			return cmd, placeholders, true
+		}
+	}
+	return Command{}, nil, false
+}
+
 // isPlaceholder reports whether s is a matcher placeholder token such as
 // "<rpmFiles:k8s-rpms>".
 func isPlaceholder(s string) bool {

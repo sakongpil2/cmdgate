@@ -60,6 +60,31 @@ commands:
 	}
 }
 
+func TestFindWithPlaceholder(t *testing.T) {
+	input := `
+commands:
+  - id: journalctl-lines
+    cmd: "journalctl -u kubelet -n <number:lines> --no-pager"
+`
+	cfg, err := Parse([]byte(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	cmd, placeholders, ok := cfg.FindCommandWithPlaceholders([]string{"journalctl", "-u", "kubelet", "-n", "50", "--no-pager"})
+	if !ok {
+		t.Fatalf("expected match")
+	}
+	if cmd.ID != "journalctl-lines" {
+		t.Errorf("id = %q, want journalctl-lines", cmd.ID)
+	}
+	if len(placeholders) != 1 {
+		t.Fatalf("placeholders = %d, want 1", len(placeholders))
+	}
+	if placeholders[0].Name != "lines" || placeholders[0].Value != "50" {
+		t.Errorf("placeholder = %+v, want lines=50", placeholders[0])
+	}
+}
+
 func TestParse(t *testing.T) {
 	tests := []struct {
 		name    string
