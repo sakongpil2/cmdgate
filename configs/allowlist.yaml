@@ -94,6 +94,14 @@ commands:
     desc: Check kubeadm certificate expiration
     cmd: "kubeadm certs check-expiration"
 
+  - id: kubeadm-join
+    desc: Join node to Kubernetes cluster
+    cmd: "kubeadm join <string:api-server> --token <string:token> --discovery-token-ca-cert-hash sha256:<string:hash>"
+
+  - id: kubeadm-upgrade-apply
+    desc: Apply Kubernetes upgrade
+    cmd: "kubeadm upgrade apply <string:version>"
+
   - id: etcdctl-endpoint-health
     desc: Check etcd endpoint health
     cmd: "etcdctl endpoint health"
@@ -113,10 +121,6 @@ commands:
   - id: swapoff-a
     desc: Disable swap
     cmd: "swapoff -a"
-
-  - id: modprobe-br-netfilter
-    desc: Load br_netfilter module
-    cmd: "modprobe br_netfilter"
 
   - id: getenforce
     desc: Show SELinux status
