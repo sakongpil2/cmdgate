@@ -38,18 +38,27 @@ func main() {
 	switch os.Args[1] {
 	case "run":
 		if err := e.handleRun(os.Args[2:]); err != nil {
-			fmt.Fprintln(os.Stderr, err)
+			printError(err)
 			os.Exit(1)
 		}
 	case "policy":
 		if err := e.handlePolicy(os.Args[2:]); err != nil {
-			fmt.Fprintln(os.Stderr, err)
+			printError(err)
 			os.Exit(1)
 		}
 	default:
 		fmt.Fprintf(os.Stderr, "unknown subcommand: %s\n", os.Args[1])
 		os.Exit(1)
 	}
+}
+
+func printError(err error) {
+	msg := err.Error()
+	if strings.Contains(msg, "command not allowed") && isTerminal(os.Stderr) && os.Getenv("NO_COLOR") == "" {
+		fmt.Fprintf(os.Stderr, "\x1b[31m%s\x1b[0m\n", msg)
+		return
+	}
+	fmt.Fprintln(os.Stderr, msg)
 }
 
 func (e *executor) handleRun(args []string) error {
