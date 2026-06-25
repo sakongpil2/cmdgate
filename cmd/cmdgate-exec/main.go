@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"os/user"
@@ -24,6 +25,8 @@ const (
 	allowlistPath = "/opt/cmdgate/allowlist.yaml"
 	auditLogPath  = "/var/log/cmdgate/audit.log"
 )
+
+var stdout io.Writer = os.Stdout
 
 // executor holds the privileged executor's configuration paths. Methods on
 // executor implement the cmdgate-exec subcommands so they can be tested with
@@ -62,26 +65,33 @@ func main() {
 }
 
 func printHelp() {
-	fmt.Println(`CmdGate - allowlist-based privileged command executor
+	fmt.Fprint(stdout, `CmdGate - allowlist-based privileged command executor
 
 Usage:
   cmdgate-exec <command> [args...]
 
 Commands:
   run     Run a pre-approved command
-  policy  Validate a policy bundle
+  policy  Validate an allowlist YAML policy
   audit   View audit logs
   help    Show this help message
 
 Examples:
   cmdgate-exec run list
   cmdgate-exec run systemctl restart kubelet
-  cmdgate-exec policy validate --bundle cmdgate-policy-1.1.0.tar.gz
-  cmdgate-exec audit tail 50`)
+  cmdgate-exec policy validate allowlist.yaml
+  cmdgate-exec audit tail 50
+
+`)
 }
 
 func printError(err error) {
 	msg := err.Error()
+	if strings.HasPrefix(msg, "usage:") {
+		fmt.Fprintln(os.Stderr, msg)
+		fmt.Fprintln(os.Stderr)
+		return
+	}
 	if strings.Contains(msg, "command not allowed") && isTerminal(os.Stderr) && os.Getenv("NO_COLOR") == "" {
 		fmt.Fprintf(os.Stderr, "\x1b[31m%s\x1b[0m\n", msg)
 		return
@@ -315,25 +325,19 @@ func (e *executor) readAuditTail(limit int) ([]string, error) {
 
 func (e *executor) handlePolicy(args []string) error {
 	if len(args) < 2 {
-		return fmt.Errorf("usage: cmdgate-exec policy validate --bundle <path>")
+		return fmt.Errorf("usage: cmdgate-exec policy validate <allowlist.yaml>")
 	}
 	if args[0] != "validate" {
 		return fmt.Errorf("unknown policy action: %s", args[0])
 	}
-	bundle := ""
-	for i := 1; i < len(args); i++ {
-		if args[i] == "--bundle" && i+1 < len(args) {
-			bundle = args[i+1]
-			break
-		}
+	if len(args) != 2 || strings.HasPrefix(args[1], "-") {
+		return fmt.Errorf("usage: cmdgate-exec policy validate <allowlist.yaml>")
 	}
-	if bundle == "" {
-		return fmt.Errorf("--bundle required")
-	}
-	if err := policy.ValidateBundle(bundle); err != nil {
+	policyPath := args[1]
+	if err := policy.ValidateAllowlistFile(policyPath); err != nil {
 		return err
 	}
-	e.writeAuditWarning(audit.LogEntry{Action: "policy_validate", CommandID: bundle, Command: bundle, Result: "success"})
+	e.writeAuditWarning(audit.LogEntry{Action: "policy_validate", CommandID: policyPath, Command: policyPath, Result: "success"})
 	return nil
 }
 

@@ -31,22 +31,24 @@ func main() {
 }
 
 func printHelp() {
-	fmt.Fprintln(stdout, `CmdGate - allowlist-based privileged command executor
+	fmt.Fprint(stdout, `CmdGate - allowlist-based privileged command executor
 
 Usage:
   cmdgate <command> [args...]
 
 Commands:
   run     Run a pre-approved command
-  policy  Validate a policy bundle
+  policy  Validate an allowlist YAML policy
   audit   View audit logs
   help    Show this help message
 
 Examples:
   cmdgate run list
   cmdgate run systemctl restart kubelet
-  cmdgate policy validate --bundle cmdgate-policy-1.1.0.tar.gz
-  cmdgate audit tail 50`)
+  cmdgate policy validate allowlist.yaml
+  cmdgate audit tail 50
+
+`)
 }
 
 func buildExecCommand(args []string) []string {

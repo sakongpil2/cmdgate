@@ -30,4 +30,13 @@ func TestPrintHelpContainsCommands(t *testing.T) {
 			t.Errorf("help output missing %q", cmd)
 		}
 	}
+	if !strings.Contains(out, "cmdgate policy validate allowlist.yaml") {
+		t.Errorf("help output missing YAML policy validate example: %q", out)
+	}
+	if strings.Contains(out, "--bundle") || strings.Contains(out, ".tar.gz") {
+		t.Errorf("help output still contains legacy bundle usage: %q", out)
+	}
+	if !strings.HasSuffix(out, "\n\n") {
+		t.Errorf("help output should end with a blank line: %q", out)
+	}
 }

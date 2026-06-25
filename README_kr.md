@@ -21,7 +21,7 @@ CmdGate는 운영자가 사전에 허용된 명령만 위임 권한으로 실행
 
 - `cmdgate run <command> [args...]`
 - `cmdgate run list`
-- `cmdgate policy validate --bundle <tar.gz>`
+- `cmdgate policy validate <allowlist.yaml>`
 - `cmdgate audit tail [n]`
 - `cmdgate help`
 - `cmdgate --help`
@@ -40,7 +40,7 @@ sudo -n /opt/cmdgate/cmdgate-exec <subcommand> [args...]
 
 - `cmdgate-exec run <command> [args...]`
 - `cmdgate-exec run list`
-- `cmdgate-exec policy validate --bundle <tar.gz>`
+- `cmdgate-exec policy validate <allowlist.yaml>`
 - `cmdgate-exec audit tail [n]`
 - `cmdgate-exec help`
 - `cmdgate-exec --help`
@@ -121,10 +121,10 @@ cmdgate run systemctl restart kubelet
 cmdgate run journalctl -u kubelet -n 50 --no-pager
 ```
 
-### 정책 번들 검증
+### allowlist 정책 검증
 
 ```bash
-cmdgate policy validate --bundle cmdgate-policy-1.1.0.tar.gz
+cmdgate policy validate allowlist.yaml
 ```
 
 ### 감사 로그 조회
@@ -263,4 +263,4 @@ cmdgateadm ALL=(root) NOPASSWD: /opt/cmdgate/cmdgate-exec *
 운영자 계정을 변경하려면 설치 시 `CMDGATE_USER`를 설정하고, `cmdgate` 실행 전에
 해당 사용자가 존재하는지 확인하세요.
 
-- 정책 번들은 manifest와 SHA-256 체크섬으로 검증됩니다.
+- 정책 파일은 배포 전에 `allowlist.yaml` 문서로 직접 검증합니다.

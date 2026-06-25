@@ -9,7 +9,7 @@ CmdGate is an allowlist-based CLI tool that lets operators run only pre-approved
 
 `cmdgate` receives user input and invokes `cmdgate-exec` via `sudo -n`. `cmdgate-exec` validates the request against the allowlist, runs any configured matchers, executes the command as an argv array, and writes an audit record.
 
-> 한국어 문서는 [README.ko.md](README.ko.md)를 참고하세요.
+> 한국어 문서는 [README_kr.md](README_kr.md)를 참고하세요.
 
 ## Binary responsibilities
 
@@ -21,7 +21,7 @@ Supported commands:
 
 - `cmdgate run <command> [args...]`
 - `cmdgate run list`
-- `cmdgate policy validate --bundle <tar.gz>`
+- `cmdgate policy validate <allowlist.yaml>`
 - `cmdgate audit tail [n]`
 - `cmdgate help`
 - `cmdgate --help`
@@ -40,7 +40,7 @@ Supported commands:
 
 - `cmdgate-exec run <command> [args...]`
 - `cmdgate-exec run list`
-- `cmdgate-exec policy validate --bundle <tar.gz>`
+- `cmdgate-exec policy validate <allowlist.yaml>`
 - `cmdgate-exec audit tail [n]`
 - `cmdgate-exec help`
 - `cmdgate-exec --help`
@@ -121,10 +121,10 @@ cmdgate run systemctl restart kubelet
 cmdgate run journalctl -u kubelet -n 50 --no-pager
 ```
 
-### Validate a policy bundle
+### Validate an allowlist policy
 
 ```bash
-cmdgate policy validate --bundle cmdgate-policy-1.1.0.tar.gz
+cmdgate policy validate allowlist.yaml
 ```
 
 ### View audit log
@@ -263,4 +263,4 @@ cmdgateadm ALL=(root) NOPASSWD: /opt/cmdgate/cmdgate-exec *
 To change the operator account, set `CMDGATE_USER` when running the installer
 and ensure the user exists before invoking `cmdgate`.
 
-- Policy bundles are validated against a manifest and SHA-256 checksum.
+- Policy files are validated directly as `allowlist.yaml` documents before deployment.

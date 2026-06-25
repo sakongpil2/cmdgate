@@ -1,11 +1,6 @@
 package main
 
 import (
-	"archive/tar"
-	"bytes"
-	"compress/gzip"
-	"crypto/sha256"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -109,7 +104,10 @@ func TestExecutorHandlePolicy(t *testing.T) {
 	dir := t.TempDir()
 	allowlistPath := filepath.Join(dir, "allowlist.yaml")
 	auditLogPath := filepath.Join(dir, "audit.log")
-	bundlePath := createTempBundle(t, dir, "version: \"2.0.0\"\nmode: allowlist-only\ncommands:\n")
+	policyPath := filepath.Join(dir, "new-allowlist.yaml")
+	if err := os.WriteFile(policyPath, []byte("version: \"2.0.0\"\nmode: allowlist-only\ncommands: []\n"), 0o644); err != nil {
+		t.Fatalf("write policy: %v", err)
+	}
 
 	tests := []struct {
 		name    string
@@ -119,18 +117,18 @@ func TestExecutorHandlePolicy(t *testing.T) {
 	}{
 		{
 			name:    "validate success",
-			args:    []string{"validate", "--bundle", bundlePath},
+			args:    []string{"validate", policyPath},
 			wantErr: false,
 		},
 		{
-			name:    "missing bundle value",
-			args:    []string{"validate", "--bundle"},
+			name:    "legacy bundle flag rejected",
+			args:    []string{"validate", "--bundle", "cmdgate-policy-1.1.0.tar.gz"},
 			wantErr: true,
-			errMsg:  "--bundle required",
+			errMsg:  "usage: cmdgate-exec policy validate <allowlist.yaml>",
 		},
 		{
 			name:    "unknown action",
-			args:    []string{"apply", "--bundle", bundlePath},
+			args:    []string{"apply", policyPath},
 			wantErr: true,
 			errMsg:  "unknown policy action",
 		},
@@ -302,51 +300,21 @@ func TestExecutorHandleAuditTailInvalidCount(t *testing.T) {
 	}
 }
 
-// createTempBundle builds a valid policy bundle tar.gz at a temporary path.
-func createTempBundle(t *testing.T, dir, allowlistContent string) string {
-	t.Helper()
-	manifest := []byte("version: \"2.0.0\"\ntimestamp: \"2026-06-25T00:00:00Z\"\n")
-	allowlist := []byte(allowlistContent)
-	sum := fmt.Sprintf("%x", sha256.Sum256(allowlist))
-	checksums := []byte(sum + "\n")
+func TestPrintHelpContainsPolicyValidateYAML(t *testing.T) {
+	var buf strings.Builder
+	oldStdout := stdout
+	defer func() { stdout = oldStdout }()
+	stdout = &buf
 
-	buf := &bytes.Buffer{}
-	gw := gzip.NewWriter(buf)
-	tw := tar.NewWriter(gw)
-
-	files := []struct {
-		name string
-		body []byte
-	}{
-		{"manifest.yaml", manifest},
-		{"allowlist.yaml", allowlist},
-		{"checksums.sha256", checksums},
+	printHelp()
+	out := buf.String()
+	if !strings.Contains(out, "cmdgate-exec policy validate allowlist.yaml") {
+		t.Errorf("help output missing YAML policy validate example: %q", out)
 	}
-
-	for _, f := range files {
-		hdr := &tar.Header{
-			Name: f.name,
-			Mode: 0o644,
-			Size: int64(len(f.body)),
-		}
-		if err := tw.WriteHeader(hdr); err != nil {
-			t.Fatalf("write header: %v", err)
-		}
-		if _, err := tw.Write(f.body); err != nil {
-			t.Fatalf("write body: %v", err)
-		}
+	if strings.Contains(out, "--bundle") || strings.Contains(out, ".tar.gz") {
+		t.Errorf("help output still contains legacy bundle usage: %q", out)
 	}
-
-	if err := tw.Close(); err != nil {
-		t.Fatalf("close tar: %v", err)
+	if !strings.HasSuffix(out, "\n\n") {
+		t.Errorf("help output should end with a blank line: %q", out)
 	}
-	if err := gw.Close(); err != nil {
-		t.Fatalf("close gzip: %v", err)
-	}
-
-	path := filepath.Join(dir, "bundle.tar.gz")
-	if err := os.WriteFile(path, buf.Bytes(), 0o644); err != nil {
-		t.Fatalf("write bundle: %v", err)
-	}
-	return path
 }
