@@ -24,8 +24,13 @@ Validation performs these checks:
 cmdgate policy validate /home/cmdgateadm/allowlist.yaml
 ```
 
-On success, the command exits with code `0` and produces no output. On failure,
-the error describes the failed check, for example:
+On success, the command exits with code `0` and prints the validated path:
+
+```text
+policy valid: /home/cmdgateadm/allowlist.yaml
+```
+
+On failure, the error describes the failed check, for example:
 
 ```text
 invalid allowlist.yaml: yaml: line 1: did not find expected node content

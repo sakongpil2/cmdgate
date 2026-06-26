@@ -24,6 +24,9 @@ import (
 const (
 	allowlistPath = "/opt/cmdgate/allowlist.yaml"
 	auditLogPath  = "/var/log/cmdgate/audit.log"
+	ansiGreen     = "\x1b[32m"
+	ansiRed       = "\x1b[31m"
+	ansiReset     = "\x1b[0m"
 )
 
 var stdout io.Writer = os.Stdout
@@ -59,7 +62,7 @@ func main() {
 			os.Exit(1)
 		}
 	default:
-		fmt.Fprintf(os.Stderr, "unknown subcommand: %s\n", os.Args[1])
+		printError(fmt.Errorf("unknown subcommand: %s", os.Args[1]))
 		os.Exit(1)
 	}
 }
@@ -88,15 +91,28 @@ Examples:
 func printError(err error) {
 	msg := err.Error()
 	if strings.HasPrefix(msg, "usage:") {
+		msg = colorize(msg, ansiRed, shouldColor(os.Stderr))
 		fmt.Fprintln(os.Stderr, msg)
 		fmt.Fprintln(os.Stderr)
 		return
 	}
-	if strings.Contains(msg, "command not allowed") && isTerminal(os.Stderr) && os.Getenv("NO_COLOR") == "" {
-		fmt.Fprintf(os.Stderr, "\x1b[31m%s\x1b[0m\n", msg)
-		return
-	}
+	msg = colorize(msg, ansiRed, shouldColor(os.Stderr))
 	fmt.Fprintln(os.Stderr, msg)
+}
+
+func colorize(s, color string, enabled bool) string {
+	if !enabled {
+		return s
+	}
+	return color + s + ansiReset
+}
+
+func shouldColor(w io.Writer) bool {
+	if os.Getenv("NO_COLOR") != "" {
+		return false
+	}
+	f, ok := w.(*os.File)
+	return ok && isTerminal(f)
 }
 
 func (e *executor) handleRun(args []string) error {
@@ -337,6 +353,7 @@ func (e *executor) handlePolicy(args []string) error {
 	if err := policy.ValidateAllowlistFile(policyPath); err != nil {
 		return err
 	}
+	fmt.Fprintf(stdout, "%s\n\n", colorize("policy valid: "+policyPath, ansiGreen, shouldColor(stdout)))
 	e.writeAuditWarning(audit.LogEntry{Action: "policy_validate", CommandID: policyPath, Command: policyPath, Result: "success"})
 	return nil
 }

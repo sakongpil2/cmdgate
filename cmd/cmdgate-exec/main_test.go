@@ -108,6 +108,10 @@ func TestExecutorHandlePolicy(t *testing.T) {
 	if err := os.WriteFile(policyPath, []byte("version: \"2.0.0\"\nmode: allowlist-only\ncommands: []\n"), 0o644); err != nil {
 		t.Fatalf("write policy: %v", err)
 	}
+	var buf strings.Builder
+	oldStdout := stdout
+	defer func() { stdout = oldStdout }()
+	stdout = &buf
 
 	tests := []struct {
 		name    string
@@ -150,7 +154,33 @@ func TestExecutorHandlePolicy(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+			if tt.name == "validate success" && !strings.Contains(buf.String(), "policy valid: "+policyPath) {
+				t.Errorf("success output = %q, want policy valid message", buf.String())
+			}
 		})
+	}
+}
+
+func TestColorize(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		color string
+		want  string
+	}{
+		{name: "success is green", input: "policy valid", color: ansiGreen, want: "\x1b[32mpolicy valid\x1b[0m"},
+		{name: "failure is red", input: "validation failed", color: ansiRed, want: "\x1b[31mvalidation failed\x1b[0m"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := colorize(tt.input, tt.color, true)
+			if got != tt.want {
+				t.Errorf("colorize() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+	if got := colorize("plain", ansiGreen, false); got != "plain" {
+		t.Errorf("colorize disabled = %q, want plain", got)
 	}
 }
 

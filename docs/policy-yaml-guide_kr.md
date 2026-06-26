@@ -24,8 +24,13 @@ allowlist.yaml
 cmdgate policy validate /home/cmdgateadm/allowlist.yaml
 ```
 
-성공하면 출력 없이 종료 코드 `0`을 반환합니다. 실패하면 어떤 검증에서 문제가
-발생했는지 오류로 알려줍니다.
+성공하면 종료 코드 `0`과 함께 검증한 경로를 출력합니다.
+
+```text
+policy valid: /home/cmdgateadm/allowlist.yaml
+```
+
+실패하면 어떤 검증에서 문제가 발생했는지 오류로 알려줍니다.
 
 ```text
 invalid allowlist.yaml: yaml: line 1: did not find expected node content

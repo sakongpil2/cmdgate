@@ -1,6 +1,8 @@
 package allowlist
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -262,6 +264,25 @@ matchers: {}
 	}
 	if err := cfg.ValidateSchema(); err == nil {
 		t.Error("expected error for unknown matcher")
+	}
+}
+
+func TestDefaultAllowlistContainerMatcherHasPattern(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("..", "..", "configs", "allowlist.yaml"))
+	if err != nil {
+		t.Fatalf("read default allowlist: %v", err)
+	}
+	cfg, err := Parse(data)
+	if err != nil {
+		t.Fatalf("parse default allowlist: %v", err)
+	}
+	matcher, ok := cfg.Matchers["container"]
+	if !ok {
+		t.Fatal("container matcher missing")
+	}
+	const want = `^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$`
+	if matcher.Pattern != want {
+		t.Errorf("container pattern = %q, want %q", matcher.Pattern, want)
 	}
 }
 

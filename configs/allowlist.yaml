@@ -208,6 +208,7 @@ matchers:
 
   container:
     type: string
+    pattern: '^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$'
 
   script:
     type: string
