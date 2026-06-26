@@ -11,6 +11,11 @@ CmdGate는 운영자가 사전에 허용된 명령만 위임 권한으로 실행
 
 > 영어 문서는 [README.md](README.md)를 참고하세요.
 
+운영 가이드:
+
+- [배포 가이드](docs/deployment-guide_kr.md)
+- [정책 YAML 검증 가이드](docs/policy-yaml-guide_kr.md)
+
 ## 바이너리 책임
 
 ### `cmdgate`
@@ -66,6 +71,8 @@ go build ./cmd/...
 ## 설치
 
 `scripts/install-cmdgate.sh`를 사용해 설치합니다. 설치 스크립트는 root 권한으로 실행해야 합니다.
+릴리즈 압축 파일을 운영 서버에 설치하는 절차는 [docs/deployment-guide_kr.md](docs/deployment-guide_kr.md)를
+참고하세요.
 
 기본 운영자 계정은 `cmdgateadm`입니다. 다른 운영자 계정을 사용하려면 설치 스크립트 실행 전에
 `CMDGATE_USER` 환경 변수를 설정합니다. 설치 스크립트는 사용자를 생성하지 않으므로, 설치 전에

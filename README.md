@@ -11,6 +11,11 @@ CmdGate is an allowlist-based CLI tool that lets operators run only pre-approved
 
 > 한국어 문서는 [README_kr.md](README_kr.md)를 참고하세요.
 
+Operational guides:
+
+- [Deployment guide](docs/deployment-guide.md)
+- [Policy YAML validation guide](docs/policy-yaml-guide.md)
+
 ## Binary responsibilities
 
 ### `cmdgate`
@@ -66,6 +71,8 @@ This produces the `cmdgate` and `cmdgate-exec` binaries.
 ## Install
 
 Use `scripts/install-cmdgate.sh`. The script must be run as root.
+For production installation from a release archive, see
+[docs/deployment-guide.md](docs/deployment-guide.md).
 
 The default operator account is `cmdgateadm`. To use a different operator
 account, set the `CMDGATE_USER` environment variable before running the

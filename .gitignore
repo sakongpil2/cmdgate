@@ -2,6 +2,7 @@
 worktrees/
 cmdgate
 cmdgate-exec
+dist/
 *.log
 
 # Agent / environment metadata
